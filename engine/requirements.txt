@@ -1,0 +1,3 @@
+# Moteur TaiCorp Agent Studio
+# Le SDK qui fait tourner les agents (wrap de Claude Code).
+claude-agent-sdk>=0.1.0

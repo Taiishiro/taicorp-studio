@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaiCorp Agent Studio — 🎮 Studio d'Agents IA</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            color: #e0e0ff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .game-area {
+            flex: 1;
+            background: #16213e;
+            border: 2px solid #00d4ff;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .dashboard {
+            width: 280px;
+            background: #0f1419;
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .dash-section {
+            border: 1px solid #00ff88;
+            padding: 12px;
+            border-radius: 4px;
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .dash-section h3 {
+            color: #00ff88;
+            font-size: 11px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .dash-value {
+            font-size: 18px;
+            color: #00ffff;
+            font-weight: bold;
+        }
+
+        .dash-label {
+            font-size: 9px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .xp-bar {
+            background: #1a3a2a;
+            border: 1px solid #00ff88;
+            height: 16px;
+            margin-top: 8px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .xp-fill {
+            background: linear-gradient(90deg, #00ff88, #00ffff);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        button {
+            background: #00ff88;
+            border: none;
+            color: #0f1419;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: #00ffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 255, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.council {
+            background: #ff6b6b;
+        }
+
+        button.council:hover {
+            background: #ff8787;
+        }
+
+        .agent-grid {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .agent {
+            position: absolute;
+            width: 60px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .agent-avatar {
+            width: 50px;
+            height: 50px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            position: relative;
+        }
+
+        .agent-name {
+            font-size: 9px;
+            text-align: center;
+            width: 100%;
+            color: #00ffff;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .agent.working .agent-avatar::before {
+            content: '⚡';
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 20px;
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        .agent.working .agent-avatar {
+            filter: drop-shadow(0 0 8px #ffff00);
+        }
+
+        .agent-info {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 7px;
+            color: #88ff88;
+            white-space: nowrap;
+            background: rgba(0, 30, 0, 0.8);
+            padding: 2px 4px;
+            border-radius: 2px;
+            border: 1px solid #00ff88;
+        }
+
+        .council-room {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 150px;
+            background: #1a3a5e;
+            border: 3px solid #ff6b6b;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            z-index: 1000;
+            box-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
+            animation: pop-in 0.3s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes pop-in {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .council-title {
+            color: #ff6b6b;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .council-members {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .council-member {
+            text-align: center;
+            font-size: 8px;
+            color: #ffff88;
+        }
+
+        .council-member-avatar {
+            width: 30px;
+            height: 30px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .ticket {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: #ffff00;
+            border: 2px solid #ff8800;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #000;
+            box-shadow: 0 0 10px #ffff00;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .status-bar {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 9px;
+            color: #00ff88;
+            background: rgba(0, 20, 0, 0.8);
+            padding: 8px 12px;
+            border: 1px solid #00ff88;
+            border-radius: 4px;
+        }
+
+        .connection-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 9px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            background: rgba(0, 50, 0, 0.9);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            z-index: 50;
+        }
+
+        .connection-status.connected::before {
+            content: '●';
+            margin-right: 6px;
+            animation: blink 1s infinite;
+        }
+
+        .connection-status.disconnected {
+            background: rgba(50, 20, 0, 0.9);
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        .connection-status.disconnected::before {
+            content: '●';
+            margin-right: 6px;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+
+        .speed-control {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            gap: 6px;
+            z-index: 50;
+        }
+
+        .speed-btn {
+            background: #4488ff;
+            padding: 6px 10px;
+            font-size: 9px;
+        }
+
+        .speed-btn.active {
+            background: #00ffff;
+            color: #000;
+        }
+
+        .agent-list {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #00ff88;
+            border-radius: 4px;
+            padding: 8px;
+        }
+
+        .agent-list-item {
+            font-size: 8px;
+            padding: 4px;
+            margin: 4px 0;
+            background: rgba(0, 255, 136, 0.08);
+            border-left: 2px solid #00ff88;
+            padding-left: 8px;
+        }
+
+        .agent-list-item.working {
+            background: rgba(255, 255, 0, 0.1);
+            border-left-color: #ffff00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game-area">
+            <div class="speed-control">
+                <button class="speed-btn active" data-speed="1">1×</button>
+                <button class="speed-btn" data-speed="2">2×</button>
+                <button class="speed-btn" data-speed="4">4×</button>
+            </div>
+
+            <div class="connection-status connected" id="connectionStatus">
+                Connecté
+            </div>
+
+            <div class="agent-grid" id="agentGrid"></div>
+
+            <div class="status-bar" id="statusBar">
+                Chargement...
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <h2 style="color: #00ffff; font-size: 14px; text-align: center;">
+                TaiCorp Agent Studio
+            </h2>
+
+            <div class="dash-section">
+                <h3>Studio Level</h3>
+                <div class="dash-value" id="dashLevel">Lv. 1</div>
+                <div class="xp-bar">
+                    <div class="xp-fill" id="xpFill" style="width: 0%"></div>
+                </div>
+                <div class="dash-label" id="xpLabel">0 / 1000 XP</div>
+            </div>
+
+            <div class="dash-section">
+                <h3>Token Consumption</h3>
+                <div class="dash-value" id="dashTokens">0 / 2M</div>
+                <div class="xp-bar">
+                    <div class="xp-fill" id="tokenFill" style="width: 0%; background: linear-gradient(90deg, #4488ff, #00ffff);"></div>
+                </div>
+            </div>
+
+            <div class="dash-section">
+                <h3>Studio Cost</h3>
+                <div class="dash-value" id="dashCost">$0.00</div>
+            </div>
+
+            <div class="dash-section">
+                <h3>Tickets Delivered</h3>
+                <div class="dash-value" id="dashDone">0</div>
+            </div>
+
+            <div class="dash-section">
+                <h3>Current Stage</h3>
+                <div class="dash-value" id="dashStage" style="font-size: 12px;">—</div>
+            </div>
+
+            <div class="controls">
+                <button id="newTicketBtn" onclick="launchOrchestrator('demo')">
+                    ▶ New Ticket (démo)
+                </button>
+                <button id="realBtn" style="background:#ff9f43;" onclick="launchOrchestrator('real')">
+                    🔥 Lancer les VRAIS agents
+                </button>
+                <button id="councilBtn" class="council" onclick="convokCouncil()">
+                    ⚖ Convoke Council
+                </button>
+            </div>
+
+            <div class="agent-list" id="agentList"></div>
+        </div>
+    </div>
+
+    <script>
+        const FETCH_INTERVAL = 1000; // 1 sec
+        // Origine relative : marche que la page soit servie depuis :8765 ou ailleurs.
+        const ORIGIN = window.location.origin.startsWith('http')
+            ? window.location.origin
+            : 'http://localhost:8765';
+        const STATE_URL = ORIGIN + '/engine/state/state.json';
+        let gameSpeed = 1;
+        let lastState = null;
+        let councilActive = false;
+
+        // Agent positions (desk layout)
+        const POSITIONS = {
+            'reporter-po': { x: 50, y: 80, desk: '📋' },
+            'architect-lead': { x: 200, y: 80, desk: '🏛' },
+            'context-manager': { x: 350, y: 80, desk: '📦' },
+            'senior-coder': { x: 500, y: 80, desk: '💻' },
+            'reviewer': { x: 50, y: 280, desk: '🔍' },
+            'test-engineer': { x: 200, y: 280, desk: '🧪' },
+            'security-reviewer': { x: 350, y: 280, desk: '🛡' },
+            'git-integration': { x: 500, y: 280, desk: '🔗' },
+            'devops-infra': { x: 650, y: 280, desk: '🐳' },
+        };
+
+        async function fetchState() {
+            try {
+                const response = await fetch(STATE_URL, { cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                updateUI(data);
+                setConnectionStatus(true);
+                return data;
+            } catch (e) {
+                console.error('Fetch failed:', e);
+                setConnectionStatus(false);
+                return null;
+            }
+        }
+
+        function setConnectionStatus(connected) {
+            const el = document.getElementById('connectionStatus');
+            if (connected) {
+                el.classList.add('connected');
+                el.classList.remove('disconnected');
+                el.textContent = '● Connecté';
+            } else {
+                el.classList.remove('connected');
+                el.classList.add('disconnected');
+                el.textContent = '● Déconnecté (moteur inactif)';
+            }
+        }
+
+        function updateUI(state) {
+            lastState = state;
+
+            // Dashboard
+            const level = Math.floor(state.xp / 100) + 1;
+            document.getElementById('dashLevel').textContent = `Lv. ${level}`;
+            document.getElementById('xpLabel').textContent = `${state.xp} / ${level * 1000} XP`;
+            document.getElementById('xpFill').style.width = `${(state.xp % 1000) / 10}%`;
+
+            document.getElementById('dashTokens').textContent = `${(state.tokens / 1000000).toFixed(2)}M / 2M`;
+            document.getElementById('tokenFill').style.width = `${(state.tokens / 2000000) * 100}%`;
+
+            document.getElementById('dashCost').textContent = `$${state.cost.toFixed(2)}`;
+            document.getElementById('dashDone').textContent = state.done;
+            document.getElementById('dashStage').textContent = state.stage || '—';
+
+            // Agents
+            const grid = document.getElementById('agentGrid');
+            grid.innerHTML = '';
+
+            for (const [name, agent] of Object.entries(state.agents)) {
+                const pos = POSITIONS[name];
+                const div = document.createElement('div');
+                div.className = `agent ${agent.status}`;
+                div.style.left = pos.x + 'px';
+                div.style.top = pos.y + 'px';
+
+                const avatar = document.createElement('div');
+                avatar.className = 'agent-avatar';
+                avatar.textContent = pos.desk;
+
+                const info = document.createElement('div');
+                info.className = 'agent-info';
+                info.textContent = `${agent.tokens || 0} tok`;
+
+                const nameEl = document.createElement('div');
+                nameEl.className = 'agent-name';
+                nameEl.textContent = name.replace('-', '\n');
+
+                div.appendChild(avatar);
+                div.appendChild(info);
+                div.appendChild(nameEl);
+
+                grid.appendChild(div);
+            }
+
+            // Ticket
+            const ticketEl = document.createElement('div');
+            ticketEl.className = 'ticket';
+            ticketEl.textContent = `#${state.ticket}`;
+            const stageIndex = Object.keys(POSITIONS).indexOf(
+                state.stage ? state.stage.split(' ')[0] : 'reporter-po'
+            );
+            const nextPos = Object.values(POSITIONS)[Math.max(0, stageIndex)];
+            ticketEl.style.left = nextPos.x + 'px';
+            ticketEl.style.top = nextPos.y + 40 + 'px';
+            grid.appendChild(ticketEl);
+
+            // Status bar
+            document.getElementById('statusBar').textContent =
+                `Ticket #${state.ticket} · Done: ${state.done} · Tokens: ${state.tokens.toLocaleString()}`;
+
+            // Agent list
+            const agentList = document.getElementById('agentList');
+            agentList.innerHTML = '';
+            for (const [name, agent] of Object.entries(state.agents)) {
+                const item = document.createElement('div');
+                item.className = `agent-list-item ${agent.status}`;
+                item.textContent = `${name}: ${agent.status} (${agent.tokens || 0}tok)`;
+                agentList.appendChild(item);
+            }
+        }
+
+        async function launchOrchestrator(mode) {
+            const request = prompt(
+                mode === 'real'
+                    ? '🔥 VRAIS agents (consomme ton abonnement, code dans ~/taicorp-studio).\nDécris le ticket :'
+                    : '▶ Démo (aucun token). Décris le ticket :',
+                'Ajoute un endpoint /health'
+            );
+            if (!request) return;
+            if (mode === 'real' && !confirm('Lancer les 9 vrais agents sur :\n\n"' + request + '"\n\nIls vont écrire du code pour de vrai. Continuer ?')) return;
+
+            const btn = mode === 'real' ? document.getElementById('realBtn') : document.getElementById('newTicketBtn');
+            const label = btn.textContent;
+            btn.textContent = '⏳ Lancement...';
+            btn.disabled = true;
+            try {
+                const r = await fetch(ORIGIN + '/run?mode=' + mode + '&request=' + encodeURIComponent(request));
+                const data = await r.json();
+                console.log('Pipeline lancé:', data);
+            } catch (e) {
+                alert('Échec du lancement : ' + e.message + '\n\nLe serveur (engine/server.py) tourne-t-il ?');
+            } finally {
+                setTimeout(() => { btn.textContent = label; btn.disabled = false; }, 2000);
+            }
+        }
+
+        function convokCouncil() {
+            if (!lastState) return;
+
+            const grid = document.getElementById('agentGrid');
+            const council = document.createElement('div');
+            council.className = 'council-room';
+
+            const title = document.createElement('div');
+            title.className = 'council-title';
+            title.textContent = '⚖ LLM COUNCIL';
+
+            const members = document.createElement('div');
+            members.className = 'council-members';
+
+            ['architect-lead', 'reviewer', 'security-reviewer'].forEach(name => {
+                const m = document.createElement('div');
+                m.className = 'council-member';
+                const avatar = document.createElement('div');
+                avatar.className = 'council-member-avatar';
+                avatar.textContent = POSITIONS[name].desk;
+                m.appendChild(avatar);
+                const nameEl = document.createElement('div');
+                nameEl.textContent = name.split('-')[0];
+                m.appendChild(nameEl);
+                members.appendChild(m);
+            });
+
+            council.appendChild(title);
+            council.appendChild(members);
+            grid.appendChild(council);
+
+            setTimeout(() => council.remove(), 3000);
+        }
+
+        // Speed control
+        document.querySelectorAll('.speed-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                gameSpeed = parseFloat(e.target.dataset.speed);
+            });
+        });
+
+        // Start polling
+        setInterval(fetchState, FETCH_INTERVAL / gameSpeed);
+
+        // Initial fetch
+        fetchState();
+    </script>
+</body>
+</html>
