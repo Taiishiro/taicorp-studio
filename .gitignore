@@ -1,3 +1,16 @@
+# État live du studio — regénéré à chaque run, jamais versionné.
 engine/state/
+state.json.tmp
+
+# Python
 __pycache__/
 *.pyc
+.venv/
+.pytest_cache/
+
+# Secrets — ne JAMAIS committer : le studio y lit ANTHROPIC_API_KEY.
+.env
+
+# Logs locaux
+*.log
+nohup.out

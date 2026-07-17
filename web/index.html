@@ -1,634 +1,575 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaiCorp Agent Studio — 🎮 Studio d'Agents IA</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
-            color: #e0e0ff;
-            font-family: 'Courier New', monospace;
-            overflow: hidden;
-            height: 100vh;
-        }
-
-        .container {
-            display: flex;
-            height: 100vh;
-            gap: 20px;
-            padding: 20px;
-        }
-
-        .game-area {
-            flex: 1;
-            background: #16213e;
-            border: 2px solid #00d4ff;
-            border-radius: 8px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
-        }
-
-        .dashboard {
-            width: 280px;
-            background: #0f1419;
-            border: 2px solid #00ff88;
-            border-radius: 8px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
-        }
-
-        .dash-section {
-            border: 1px solid #00ff88;
-            padding: 12px;
-            border-radius: 4px;
-            background: rgba(0, 255, 136, 0.05);
-        }
-
-        .dash-section h3 {
-            color: #00ff88;
-            font-size: 11px;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .dash-value {
-            font-size: 18px;
-            color: #00ffff;
-            font-weight: bold;
-        }
-
-        .dash-label {
-            font-size: 9px;
-            color: #888;
-            margin-top: 4px;
-        }
-
-        .xp-bar {
-            background: #1a3a2a;
-            border: 1px solid #00ff88;
-            height: 16px;
-            margin-top: 8px;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .xp-fill {
-            background: linear-gradient(90deg, #00ff88, #00ffff);
-            height: 100%;
-            transition: width 0.3s ease;
-        }
-
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        button {
-            background: #00ff88;
-            border: none;
-            color: #0f1419;
-            padding: 12px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        button:hover {
-            background: #00ffff;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 255, 255, 0.4);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        button.council {
-            background: #ff6b6b;
-        }
-
-        button.council:hover {
-            background: #ff8787;
-        }
-
-        .agent-grid {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-
-        .agent {
-            position: absolute;
-            width: 60px;
-            height: 80px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .agent-avatar {
-            width: 50px;
-            height: 50px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            position: relative;
-        }
-
-        .agent-name {
-            font-size: 9px;
-            text-align: center;
-            width: 100%;
-            color: #00ffff;
-            text-transform: uppercase;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .agent.working .agent-avatar::before {
-            content: '⚡';
-            position: absolute;
-            top: 0;
-            right: 0;
-            font-size: 20px;
-            animation: pulse 0.5s infinite alternate;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(1.2); opacity: 0.7; }
-        }
-
-        .agent.working .agent-avatar {
-            filter: drop-shadow(0 0 8px #ffff00);
-        }
-
-        .agent-info {
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 7px;
-            color: #88ff88;
-            white-space: nowrap;
-            background: rgba(0, 30, 0, 0.8);
-            padding: 2px 4px;
-            border-radius: 2px;
-            border: 1px solid #00ff88;
-        }
-
-        .council-room {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 200px;
-            height: 150px;
-            background: #1a3a5e;
-            border: 3px solid #ff6b6b;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            z-index: 1000;
-            box-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
-            animation: pop-in 0.3s ease-out;
-            pointer-events: none;
-        }
-
-        @keyframes pop-in {
-            0% { transform: translate(-50%, -50%) scale(0); }
-            100% { transform: translate(-50%, -50%) scale(1); }
-        }
-
-        .council-title {
-            color: #ff6b6b;
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 12px;
-        }
-
-        .council-members {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-        }
-
-        .council-member {
-            text-align: center;
-            font-size: 8px;
-            color: #ffff88;
-        }
-
-        .council-member-avatar {
-            width: 30px;
-            height: 30px;
-            background: #ff6b6b;
-            border-radius: 50%;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-
-        .ticket {
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            background: #ffff00;
-            border: 2px solid #ff8800;
-            border-radius: 2px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: bold;
-            color: #000;
-            box-shadow: 0 0 10px #ffff00;
-            z-index: 10;
-            transition: all 0.3s ease;
-        }
-
-        .status-bar {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            font-size: 9px;
-            color: #00ff88;
-            background: rgba(0, 20, 0, 0.8);
-            padding: 8px 12px;
-            border: 1px solid #00ff88;
-            border-radius: 4px;
-        }
-
-        .connection-status {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 9px;
-            padding: 6px 10px;
-            border-radius: 4px;
-            background: rgba(0, 50, 0, 0.9);
-            border: 1px solid #00ff88;
-            color: #00ff88;
-            z-index: 50;
-        }
-
-        .connection-status.connected::before {
-            content: '●';
-            margin-right: 6px;
-            animation: blink 1s infinite;
-        }
-
-        .connection-status.disconnected {
-            background: rgba(50, 20, 0, 0.9);
-            border-color: #ff6b6b;
-            color: #ff6b6b;
-        }
-
-        .connection-status.disconnected::before {
-            content: '●';
-            margin-right: 6px;
-        }
-
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            100% { opacity: 0.3; }
-        }
-
-        .speed-control {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            display: flex;
-            gap: 6px;
-            z-index: 50;
-        }
-
-        .speed-btn {
-            background: #4488ff;
-            padding: 6px 10px;
-            font-size: 9px;
-        }
-
-        .speed-btn.active {
-            background: #00ffff;
-            color: #000;
-        }
-
-        .agent-list {
-            margin-top: 20px;
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #00ff88;
-            border-radius: 4px;
-            padding: 8px;
-        }
-
-        .agent-list-item {
-            font-size: 8px;
-            padding: 4px;
-            margin: 4px 0;
-            background: rgba(0, 255, 136, 0.08);
-            border-left: 2px solid #00ff88;
-            padding-left: 8px;
-        }
-
-        .agent-list-item.working {
-            background: rgba(255, 255, 0, 0.1);
-            border-left-color: #ffff00;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaiCorp Agent Studio</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0b0d14;--panel:#0d1117;--line:#1f2630;--line2:#2a3340;
+  --txt:#c9d4e3;--dim:#6b7689;--accent:#58a6ff;--green:#3fb950;
+  --orange:#f0883e;--red:#f85149;--purple:#a371f7;--pink:#f778ba;--yellow:#e3b341;
+  --sans:'Segoe UI',system-ui,sans-serif;
+}
+body{background:var(--bg);color:var(--txt);font-family:'Courier New',monospace;overflow:hidden;height:100vh}
+.app{display:flex;flex-direction:column;height:100vh}
+.topbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.logo{font-weight:bold;color:var(--accent);letter-spacing:1px;font-size:13px;white-space:nowrap}.logo b{color:var(--green)}
+.composer{flex:1;min-width:200px;background:#0a0e14;border:1px solid var(--line2);color:var(--txt);padding:9px 11px;border-radius:7px;font-family:var(--sans);font-size:13px}
+.composer:focus{outline:none;border-color:var(--accent)}
+.flowSel{background:#11161f;border:1px solid var(--line2);color:var(--txt);padding:8px;border-radius:7px;font-family:var(--sans);font-size:12px;cursor:pointer}
+.tb{border:1px solid var(--line2);background:#11161f;color:var(--txt);padding:8px 11px;border-radius:7px;font-family:var(--sans);font-weight:600;cursor:pointer;font-size:12px;white-space:nowrap;transition:.12s}
+.tb:hover{border-color:var(--accent);color:#fff}
+.tb.send{background:var(--accent);color:#06223f;border-color:var(--accent)}
+.real-toggle{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--dim);cursor:pointer;font-family:var(--sans)}.real-toggle input{accent-color:var(--red)}
+.pipeline{display:flex;align-items:center;gap:2px;padding:5px 12px;background:#0a0e15;border-bottom:1px solid var(--line);font-family:var(--sans);overflow-x:auto}
+.pstep{font-size:10px;font-weight:600;color:var(--dim);padding:3px 8px;border-radius:5px;background:#11161f;white-space:nowrap}
+.pstep.past{color:var(--accent)}.pstep.on{color:#06280f;background:var(--green)}.parr{color:#2a3340;font-size:11px}
+.main{flex:1;display:flex;min-height:0}
+.stage{flex:1;position:relative;background:#070a10;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.board{position:relative;display:inline-block;line-height:0}
+canvas#C{image-rendering:pixelated;image-rendering:crisp-edges;display:block;cursor:grab}
+canvas#C.drag{cursor:grabbing}
+.overlay{position:absolute;inset:0;pointer-events:none;font-family:var(--sans);overflow:hidden}
+.ag-label{position:absolute;transform:translate(-50%,0);text-align:center;white-space:nowrap;z-index:5;text-shadow:0 1px 2px #000,0 0 3px #000;cursor:pointer;pointer-events:auto}
+.ag-label .an{display:block;font-size:11px;font-weight:700;color:#fff;line-height:1}
+.ag-label .ar{display:block;font-size:8px;letter-spacing:1px;color:#9aa4b0;line-height:1.2}
+.ag-label.on .an{color:#7ee2a0}.ag-label.gen .ar{color:var(--purple)}
+.bubble{position:absolute;transform:translate(-50%,-100%);background:#fff;border:2px solid #0b0d14;border-radius:11px;padding:4px 8px;font-size:11px;line-height:1.25;color:#0b0d14;font-weight:600;max-width:180px;white-space:normal;z-index:6;box-shadow:0 2px 0 rgba(0,0,0,.45)}
+.bubble.idea{background:#fff5e0;border-color:#7a4a10}
+.bubble .tail{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #0b0d14}
+.bubble .tail:after{content:'';position:absolute;left:-4px;top:-8px;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid #fff}
+.bubble.idea .tail:after{border-top-color:#fff5e0}
+.conn{position:absolute;top:8px;right:178px;font-size:10px;padding:4px 8px;border-radius:4px;z-index:7;font-family:var(--sans)}
+.conn-on{background:rgba(63,185,80,.15);color:var(--green);border:1px solid var(--green)}
+.conn-off{background:rgba(248,81,73,.15);color:var(--red);border:1px solid var(--red)}
+.modepill{position:absolute;top:8px;left:8px;font-size:10px;padding:4px 8px;border-radius:4px;background:rgba(88,166,255,.12);color:var(--accent);border:1px solid var(--line2);z-index:7;font-family:var(--sans)}
+.zoomctl{position:absolute;left:8px;top:36px;display:flex;gap:4px;z-index:7}
+.zoomctl button{width:24px;height:24px;border:1px solid var(--line2);background:rgba(13,17,23,.85);color:var(--txt);border-radius:5px;cursor:pointer;font-size:13px;font-family:var(--sans)}
+.zoomctl button:hover{border-color:var(--accent)}
+.feed{position:absolute;left:8px;bottom:8px;right:8px;height:24px;background:rgba(10,13,20,.85);border:1px solid var(--line);border-radius:5px;display:flex;align-items:center;gap:16px;padding:0 10px;overflow:hidden;font-size:11px;z-index:7;font-family:var(--sans)}
+.feed .fi{white-space:nowrap;color:var(--dim)}.feed .fi b{color:var(--green)}.feed .fi i{color:var(--accent);font-style:normal}
+.mini{position:absolute;top:8px;right:8px;border:1px solid var(--line2);border-radius:5px;background:rgba(7,10,16,.9);z-index:8;cursor:crosshair}
+.inspector{position:fixed;top:92px;left:12px;width:330px;max-width:92vw;max-height:calc(100vh - 120px);overflow-y:auto;background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:14px;z-index:9;display:none;font-family:var(--sans);box-shadow:0 12px 36px rgba(0,0,0,.65)}
+.inspector.show{display:block}
+.inspector .ihead{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.inspector .iname{flex:1;min-width:0;background:#0a0e14;border:1px solid var(--line2);color:#fff;font-weight:700;font-size:15px;padding:7px 9px;border-radius:6px;font-family:var(--sans)}
+.inspector .irole{font-size:11px;color:var(--dim);margin:6px 0 10px}
+.inspector .ifield{display:flex;justify-content:space-between;gap:12px;font-size:12px;padding:5px 0;border-bottom:1px solid var(--line)}
+.inspector .ifield b{color:var(--txt);text-align:right;word-break:break-word;font-weight:600}
+.inspector .ilabel{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin:11px 0 3px}
+.inspector .iact{background:#0a0e14;border:1px solid var(--line);border-radius:6px;padding:8px;font-size:12px;color:var(--green);min-height:34px;word-break:break-word;line-height:1.35}
+.inspector .ilog{list-style:none;margin:4px 0 0;padding:0;font-size:11px;color:var(--dim);max-height:104px;overflow:auto}
+.inspector .ilog li{padding:3px 0;border-bottom:1px solid var(--line);line-height:1.3}
+.inspector .ilog li b{color:var(--accent);font-weight:600}
+.inspector textarea{width:100%;height:58px;margin-top:10px;background:#070a10;border:1px solid var(--line2);color:var(--txt);font-family:var(--sans);font-size:12px;padding:8px;border-radius:6px;resize:vertical}
+.inspector .ia{display:flex;gap:8px;margin-top:8px}
+.errbar{position:absolute;top:40px;left:50%;transform:translateX(-50%);z-index:20;max-width:84%;background:rgba(248,81,73,.96);color:#fff;padding:9px 14px;border-radius:8px;font-family:var(--sans);font-size:12px;font-weight:600;display:none;box-shadow:0 6px 20px rgba(0,0,0,.55);cursor:pointer;text-align:center}
+.errbar.show{display:block}
+.x{cursor:pointer;color:var(--dim);font-size:17px;line-height:1}.x:hover{color:var(--red)}
+.qpanel{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:8;background:var(--panel);border:1px solid var(--yellow);border-radius:9px;padding:12px 14px;width:min(440px,90%);display:none;font-family:var(--sans)}
+.qpanel.show{display:block}.qpanel h4{color:var(--yellow);font-size:12px;margin-bottom:8px}
+.qpanel .q{font-size:12px;color:var(--txt);margin:4px 0;padding-left:16px;position:relative}
+.qpanel .q::before{content:'?';position:absolute;left:0;color:var(--yellow);font-weight:bold}
+.qpanel textarea{width:100%;height:46px;margin-top:8px;background:#070a10;border:1px solid var(--line2);color:var(--txt);font-family:var(--sans);font-size:12px;padding:6px;border-radius:5px;resize:none}
+.dash{width:262px;background:var(--panel);border-left:1px solid var(--line);padding:11px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;font-family:var(--sans)}
+.card{border:1px solid var(--line);border-radius:7px;padding:8px 10px;background:#0a0e15}
+.card h3{color:var(--dim);font-size:8px;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.card .v{font-size:17px;color:var(--accent);font-weight:bold}.card .sub{font-size:9px;color:var(--dim);margin-top:2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bar{background:#11161f;height:7px;border-radius:4px;overflow:hidden;margin-top:5px}.bar i{display:block;height:100%;border-radius:4px;transition:width .4s}
+.xp i{background:linear-gradient(90deg,var(--green),var(--accent))}.tok i{background:linear-gradient(90deg,var(--orange),var(--pink))}
+.agents-card{flex:1;min-height:80px}.alist{display:flex;flex-direction:column;gap:3px;margin-top:4px}
+.ai{display:flex;align-items:center;gap:6px;font-size:10px;padding:4px 6px;background:#0a0e15;border:1px solid var(--line);border-radius:4px;cursor:pointer}
+.ai:hover{border-color:var(--accent)}.ai .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:var(--dim)}
+.ai.working .dot{background:var(--green);box-shadow:0 0 5px var(--green)}.ai.done .dot{background:var(--accent)}
+.ai .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ai .nm small{color:var(--dim)}
+.ai .act{color:var(--green);font-size:9px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.modal-bg{position:fixed;inset:0;background:rgba(3,5,9,.78);z-index:50;display:none;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line2);border-radius:10px;width:min(780px,94vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;font-family:var(--sans)}
+.modal .mh{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);background:#0a0e15}.modal .mh h2{font-size:13px;color:var(--accent);flex:1}
+.modal .mb{padding:14px;overflow:auto;display:flex;gap:14px}
+.ed-list{width:200px;flex-shrink:0;display:flex;flex-direction:column;gap:4px;max-height:62vh;overflow:auto}
+.ed-list .eli{padding:7px 9px;border:1px solid var(--line);border-radius:5px;font-size:11px;cursor:pointer;background:#0a0e15}
+.ed-list .eli:hover{border-color:var(--accent)}.ed-list .eli.sel{border-color:var(--accent);background:#11233c}
+.ed-list .eli small{display:block;color:var(--dim);font-size:8px;margin-top:2px}
+.ed-main{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}
+.ed-main textarea{width:100%;height:50vh;background:#070a10;border:1px solid var(--line2);color:#cfe0d4;font-family:'Courier New',monospace;font-size:12px;padding:10px;border-radius:6px;resize:vertical;line-height:1.4}
+.ed-actions{display:flex;gap:8px;align-items:center}.hint{font-size:10px;color:var(--dim)}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="game-area">
-            <div class="speed-control">
-                <button class="speed-btn active" data-speed="1">1×</button>
-                <button class="speed-btn" data-speed="2">2×</button>
-                <button class="speed-btn" data-speed="4">4×</button>
-            </div>
-
-            <div class="connection-status connected" id="connectionStatus">
-                Connecté
-            </div>
-
-            <div class="agent-grid" id="agentGrid"></div>
-
-            <div class="status-bar" id="statusBar">
-                Chargement...
-            </div>
+<div class="app">
+  <div class="topbar">
+    <div class="logo">TaiCorp <b>Agent</b> Studio</div>
+    <input id="composer" class="composer" placeholder="Demande aux agents… (ex: « mets ça sur mon repo github »)">
+    <select id="flowSel" class="flowSel"></select>
+    <label class="real-toggle"><input type="checkbox" id="realChk"> 🔥 Réel</label>
+    <button class="tb send" onclick="sendComposer()">➤ Envoyer</button>
+    <button class="tb" onclick="genPrompt()" title="Générer un bureau">🏢</button>
+    <button class="tb" onclick="showCouncil()" title="Council">⚖</button>
+    <button class="tb" onclick="openEditor()" title="Éditer les agents">⚙</button>
+  </div>
+  <div class="pipeline" id="pipeline"></div>
+  <div class="main">
+    <div class="stage" id="stage">
+      <div class="board" id="board">
+        <canvas id="C"></canvas>
+        <div class="overlay" id="overlay"></div>
+        <canvas id="mini" class="mini" width="170" height="113"></canvas>
+        <div class="modepill" id="modePill">mode: pipeline</div>
+        <div class="conn conn-on" id="conn">● LIVE</div>
+        <div class="zoomctl"><button onclick="zoomBy(1.25)">+</button><button onclick="zoomBy(0.8)">−</button><button onclick="resetCam()" title="Tout voir">⤢</button></div>
+        <div class="feed" id="feed"></div>
+        <div class="errbar" id="errbar" onclick="this.classList.remove('show')"></div>
+        <div class="qpanel" id="qpanel">
+          <h4>Le PO te pose des questions</h4><div id="qlist"></div>
+          <textarea id="qans" placeholder="Tes réponses…"></textarea>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <button class="tb send" style="flex:1" onclick="answerPO()">Répondre &amp; router</button>
+            <button class="tb" onclick="document.getElementById('qpanel').classList.remove('show')">✕</button>
+          </div>
         </div>
-
-        <div class="dashboard">
-            <h2 style="color: #00ffff; font-size: 14px; text-align: center;">
-                TaiCorp Agent Studio
-            </h2>
-
-            <div class="dash-section">
-                <h3>Studio Level</h3>
-                <div class="dash-value" id="dashLevel">Lv. 1</div>
-                <div class="xp-bar">
-                    <div class="xp-fill" id="xpFill" style="width: 0%"></div>
-                </div>
-                <div class="dash-label" id="xpLabel">0 / 1000 XP</div>
-            </div>
-
-            <div class="dash-section">
-                <h3>Token Consumption</h3>
-                <div class="dash-value" id="dashTokens">0 / 2M</div>
-                <div class="xp-bar">
-                    <div class="xp-fill" id="tokenFill" style="width: 0%; background: linear-gradient(90deg, #4488ff, #00ffff);"></div>
-                </div>
-            </div>
-
-            <div class="dash-section">
-                <h3>Studio Cost</h3>
-                <div class="dash-value" id="dashCost">$0.00</div>
-            </div>
-
-            <div class="dash-section">
-                <h3>Tickets Delivered</h3>
-                <div class="dash-value" id="dashDone">0</div>
-            </div>
-
-            <div class="dash-section">
-                <h3>Current Stage</h3>
-                <div class="dash-value" id="dashStage" style="font-size: 12px;">—</div>
-            </div>
-
-            <div class="controls">
-                <button id="newTicketBtn" onclick="launchOrchestrator('demo')">
-                    ▶ New Ticket (démo)
-                </button>
-                <button id="realBtn" style="background:#ff9f43;" onclick="launchOrchestrator('real')">
-                    🔥 Lancer les VRAIS agents
-                </button>
-                <button id="councilBtn" class="council" onclick="convokCouncil()">
-                    ⚖ Convoke Council
-                </button>
-            </div>
-
-            <div class="agent-list" id="agentList"></div>
+        <div class="inspector" id="inspector">
+          <div class="ihead"><input class="iname" id="iName" oninput="saveInspName()"><span class="x" onclick="closeInspector()">✕</span></div>
+          <div class="irole" id="iRole">—</div>
+          <div class="ifield"><span>Statut</span><b id="iStatus">idle</b></div>
+          <div class="ifield"><span>Modèle</span><b id="iModel">—</b></div>
+          <div class="ifield"><span>Tokens</span><b id="iTokens">0</b></div>
+          <div class="ifield"><span>Tâche</span><b id="iTask2">—</b></div>
+          <div class="ilabel">Action en cours</div>
+          <div class="iact" id="iAction">au repos</div>
+          <div class="ilabel">Dernières actions</div>
+          <ul class="ilog" id="iLog"><li>—</li></ul>
+          <textarea id="iTask" placeholder="Donner une tâche directe à cet agent…"></textarea>
+          <div class="ia"><button class="tb send" style="flex:1" onclick="inspSend()">Lancer</button><button class="tb" onclick="inspEdit()">✎ prompt</button></div>
         </div>
+      </div>
     </div>
+    <div class="dash">
+      <div class="card"><h3>Studio Level</h3><div class="v" id="dLv">Lv. 1</div><div class="bar xp"><i id="xpF" style="width:0%"></i></div><div class="sub" id="xpL">0 / 100 XP</div></div>
+      <div class="card"><h3>Tokens consommés</h3><div class="v" id="dTok">0</div><div class="bar tok"><i id="tokF" style="width:0%"></i></div><div class="sub" id="tokSub">0 ce run · sur 2M</div><div class="sub" id="tokBreak" style="margin-top:3px">in 0 · out 0 · cache 0</div></div>
+      <div class="grid2">
+        <div class="card"><h3>Coût total</h3><div class="v" id="dCost" style="font-size:15px">$0</div><div class="sub" id="costSub">$0/ticket</div></div>
+        <div class="card"><h3>Tickets</h3><div class="v" id="dDone" style="font-size:15px">0</div><div class="sub" id="ticketSub">#0</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><h3>Mode</h3><div class="v" id="dMode" style="font-size:13px">—</div><div class="sub" id="runSub">au repos</div></div>
+        <div class="card"><h3>Agents actifs</h3><div class="v" id="dActive" style="font-size:15px">0 / 9</div><div class="sub" id="genSub">0 générés</div></div>
+      </div>
+      <div class="card"><h3>Étape courante</h3><div class="v" id="dStage" style="font-size:12px">—</div><div class="sub" id="reqSub" style="white-space:normal;margin-top:4px">—</div></div>
+      <div class="card agents-card"><h3>Agents — clic = inspecteur</h3><div class="alist" id="alist"></div></div>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="edOverlay">
+  <div class="modal">
+    <div class="mh"><h2>⚙ Éditeur d'agents IA</h2><button class="tb" onclick="newAgent()">＋ Nouvel agent</button><span class="x" onclick="closeEditor()">✕</span></div>
+    <div class="mb">
+      <div class="ed-list" id="edList"></div>
+      <div class="ed-main"><textarea id="edText" placeholder="Choisis un agent à gauche…" spellcheck="false"></textarea>
+        <div class="ed-actions"><span class="hint">Prompt complet + frontmatter. Sauvé dans le .md.</span><span class="hint" id="edMsg" style="margin-left:auto"></span><button class="tb send" onclick="saveAgent()">💾 Sauvegarder</button></div>
+      </div>
+    </div>
+  </div>
+</div>
 
-    <script>
-        const FETCH_INTERVAL = 1000; // 1 sec
-        // Origine relative : marche que la page soit servie depuis :8765 ou ailleurs.
-        const ORIGIN = window.location.origin.startsWith('http')
-            ? window.location.origin
-            : 'http://localhost:8765';
-        const STATE_URL = ORIGIN + '/engine/state/state.json';
-        let gameSpeed = 1;
-        let lastState = null;
-        let councilActive = false;
+<script>
+// ═══════════════════ CONFIG : monde (world) vs viewport ═══════════════════
+const ORIGIN=location.origin.startsWith('http')?location.origin:'http://localhost:8765';
+const STATE_URL=ORIGIN+'/engine/state/state.json';   // repli si le flux SSE tombe
+// Jeton anti-CSRF. Le serveur ne le sert qu'en same-origin (aucun en-tête CORS)
+// et l'exige sur toute mutation : sans ça, une page tierce déclenchait /run —
+// donc du code arbitraire — par un simple <img src>.
+let TOKEN='';
+const tokenReady=fetch(ORIGIN+'/token',{cache:'no-store'})
+  .then(r=>r.json()).then(j=>{TOKEN=j.token||'';}).catch(()=>{});
+async function post(path,body){
+  await tokenReady;
+  const r=await fetch(ORIGIN+path,{method:'POST',
+    headers:{'Content-Type':'application/json','X-Studio-Token':TOKEN},
+    body:JSON.stringify(body)});
+  return r.json();
+}
+const TILE=16, COLS=72, ROWS=48, W=COLS*TILE, H=ROWS*TILE;   // monde 72×48 (1152×768)
+const VW=896, VH=560;                                         // viewport (canvas interne)
+// ponytail: monde fixe baké en 1 bitmap + caméra. Pas de chunks/étages tant
+// qu'un profiler ne crie pas — 1 drawImage suffit à cette échelle.
+const canvas=document.getElementById('C'); let ctx=canvas.getContext('2d');
+canvas.width=VW; canvas.height=VH;
+function fitCanvas(){const s=document.getElementById('stage');const r=Math.min(s.clientWidth/VW,s.clientHeight/VH);canvas.style.width=Math.floor(VW*r)+'px';canvas.style.height=Math.floor(VH*r)+'px';}
+window.addEventListener('resize',fitCanvas);
 
-        // Agent positions (desk layout)
-        const POSITIONS = {
-            'reporter-po': { x: 50, y: 80, desk: '📋' },
-            'architect-lead': { x: 200, y: 80, desk: '🏛' },
-            'context-manager': { x: 350, y: 80, desk: '📦' },
-            'senior-coder': { x: 500, y: 80, desk: '💻' },
-            'reviewer': { x: 50, y: 280, desk: '🔍' },
-            'test-engineer': { x: 200, y: 280, desk: '🧪' },
-            'security-reviewer': { x: 350, y: 280, desk: '🛡' },
-            'git-integration': { x: 500, y: 280, desk: '🔗' },
-            'devops-infra': { x: 650, y: 280, desk: '🐳' },
-        };
+const cam={x:0,y:0,scale:1,tx:0,ty:0,tscale:1};
+let follow=null;
+function minScale(){return Math.min(VW/W,VH/H);}
+function clampAxis(v,world,view){return view>=world?(world-view)/2:Math.max(0,Math.min(world-view,v));}
+function resetCam(){follow=null;cam.tscale=minScale();cam.tx=(W-VW/cam.tscale)/2;cam.ty=(H-VH/cam.tscale)/2;}
+function zoomBy(f,vx,vy){vx=vx??VW/2;vy=vy??VH/2;const wx=cam.x+vx/cam.scale,wy=cam.y+vy/cam.scale;cam.tscale=Math.max(minScale(),Math.min(4,cam.tscale*f));cam.tx=wx-vx/cam.tscale;cam.ty=wy-vy/cam.tscale;follow=null;}
 
-        async function fetchState() {
-            try {
-                const response = await fetch(STATE_URL, { cache: 'no-store' });
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-                updateUI(data);
-                setConnectionStatus(true);
-                return data;
-            } catch (e) {
-                console.error('Fetch failed:', e);
-                setConnectionStatus(false);
-                return null;
-            }
-        }
+// ═══════════════════ AGENTS ═══════════════════
+const DEF={
+  'reporter-po':{label:'PO',skin:'#e8b88a',hair:'#3a2a1a',shirt:'#3b82f6',pants:'#1e293b',acc:'clipboard'},
+  'architect-lead':{label:'ARCH',skin:'#d49a6a',hair:'#111',shirt:'#8b5cf6',pants:'#2a1a3a',acc:'hardhat'},
+  'context-manager':{label:'CTX',skin:'#f3cda9',hair:'#b03060',shirt:'#06b6d4',pants:'#13343b',acc:'headset'},
+  'senior-coder':{label:'DEV',skin:'#e8b88a',hair:'#caa83a',shirt:'#10b981',pants:'#14342a',acc:'glasses'},
+  'reviewer':{label:'REV',skin:'#c68642',hair:'#111',shirt:'#ef4444',pants:'#3a1414',acc:'magnify'},
+  'test-engineer':{label:'TEST',skin:'#f3cda9',hair:'#7c3aed',shirt:'#f59e0b',pants:'#3a2a08',acc:'labcoat'},
+  'security-reviewer':{label:'SEC',skin:'#d49a6a',hair:'#0a3a2a',shirt:'#dc2626',pants:'#1a1a1a',acc:'shield'},
+  'git-integration':{label:'GIT',skin:'#e8b88a',hair:'#333',shirt:'#f97316',pants:'#2a2417',acc:'cap'},
+  'devops-infra':{label:'OPS',skin:'#c68642',hair:'#7a4a10',shirt:'#6366f1',pants:'#1c1f3a',acc:'wrench'},
+};
+const PERSONA={'reporter-po':'Léa','architect-lead':'Hugo','context-manager':'Inès','senior-coder':'Marco','reviewer':'Sofia','test-engineer':'Tom','security-reviewer':'Nora','git-integration':'Max','devops-infra':'Lina'};
+function nameOf(id){return localStorage.getItem('an:'+id)||PERSONA[id]||(sprites[id]&&sprites[id].label)||id;}
+function roleOf(id){return DEF[id]?DEF[id].label:(sprites[id]&&sprites[id].dynamic?'GÉNÉRÉ':id.slice(0,5).toUpperCase());}
+function setName(id,v){if(v&&v.trim())localStorage.setItem('an:'+id,v.trim());}
+const DYN_PAL=[{skin:'#e8b88a',hair:'#5a3aa0',shirt:'#14b8a6',pants:'#143',acc:'glasses'},{skin:'#d49a6a',hair:'#a04020',shirt:'#eab308',pants:'#332',acc:'cap'},{skin:'#f3cda9',hair:'#206040',shirt:'#ec4899',pants:'#313',acc:'headset'},{skin:'#c68642',hair:'#1040a0',shirt:'#22c55e',pants:'#132',acc:'magnify'}];
+const sprites={}; let nextDyn=0;
+function homeFor(i){const h=(world.homes&&world.homes[i])||(world.homes&&world.homes[0])||[4,4];return [h[0]*TILE,h[1]*TILE];}
+function dynHome(){const s=(world.dyn&&world.dyn[nextDyn%world.dyn.length])||[COLS-6,ROWS-4];return [s[0]*TILE,s[1]*TILE];}
+function ensureSprite(id){
+  if(sprites[id])return sprites[id];
+  let d=DEF[id],hx,hy;
+  if(d){const i=Object.keys(DEF).indexOf(id);[hx,hy]=homeFor(i);}
+  else{const p=DYN_PAL[nextDyn%DYN_PAL.length];[hx,hy]=dynHome();nextDyn++;d=Object.assign({label:id.slice(0,4).toUpperCase()},p);}
+  return sprites[id]={id,...d,dynamic:!DEF[id],x:hx,y:hy,tx:hx,ty:hy,homeX:hx,homeY:hy,facing:0,walking:false,status:'idle',action:null,tokens:0};
+}
 
-        function setConnectionStatus(connected) {
-            const el = document.getElementById('connectionStatus');
-            if (connected) {
-                el.classList.add('connected');
-                el.classList.remove('disconnected');
-                el.textContent = '● Connecté';
-            } else {
-                el.classList.remove('connected');
-                el.classList.add('disconnected');
-                el.textContent = '● Déconnecté (moteur inactif)';
-            }
-        }
+// flow selector
+(function(){const sel=document.getElementById('flowSel');
+  [['route','PO route (auto)'],['pipeline','Pipeline complet'],['meta','Méta-agent']].forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;sel.appendChild(o);});
+  const og=document.createElement('optgroup');og.label='Agent ciblé';
+  Object.keys(DEF).forEach(id=>{const o=document.createElement('option');o.value=id;o.textContent='→ '+DEF[id].label;og.appendChild(o);});
+  sel.appendChild(og);})();
 
-        function updateUI(state) {
-            lastState = state;
+// ═══════════════════ THEMES + FURNITURE ═══════════════════
+const THEMES={
+  default:{floorA:'#6b4a2f',floorB:'#5f4128',floorLine:'#3f2c1a',wall:'#2b2f3c',wallTop:'#3c4150',wallShade:'#161922',rug:'#16314e',rugEdge:'#1d4063',accent:'#58a6ff'},
+  cyber:{floorA:'#0c1024',floorB:'#11163050'.slice(0,7),floorLine:'#1a2348',wall:'#1d1438',wallTop:'#5a2a9a',wallShade:'#120a26',rug:'#160a2e',rugEdge:'#ff2bd6',accent:'#00eaff',neon:true},
+};
+let theme=THEMES.default;
+const WOOD={desk:'#5a3d28',deskTop:'#74502f',deskEdge:'#3f2a1a',chair:'#333',plant:'#2f7d4f',pot:'#6b4226'};
+function ell(cx,cy,rx,ry){ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,7);ctx.fill();}
+// mur 2.5D : cap éclairé en haut + face avant haute et sombre + ombre portée au sol → relief
+function wallTile(c,r){const x=c*TILE,y=r*TILE;
+  ctx.fillStyle='rgba(0,0,0,.22)';ctx.fillRect(x+2,y+TILE-1,TILE,5);   // ombre portée (sud)
+  ctx.fillStyle=theme.wallShade;ctx.fillRect(x,y+TILE-6,TILE,6);       // face avant (hauteur)
+  ctx.fillStyle=theme.wall;ctx.fillRect(x,y+4,TILE,TILE-9);            // corps
+  ctx.fillStyle=theme.wallTop;ctx.fillRect(x,y,TILE,5);               // cap (haut éclairé)
+  ctx.fillStyle='rgba(255,255,255,.06)';ctx.fillRect(x,y,TILE,1);
+  if(theme.neon){ctx.fillStyle=theme.rugEdge;ctx.fillRect(x,y+4,2,TILE-9);}}
+function fDesk(c,r,accent){const x=c*TILE,y=r*TILE,W3=TILE*3,H2=TILE*2;
+  ctx.fillStyle='rgba(0,0,0,.25)';ctx.fillRect(x+3,y+H2-1,W3,5);                  // ombre portée
+  ctx.fillStyle='#2b2b33';ctx.fillRect(x+TILE+3,y+H2,TILE-6,7);ctx.fillStyle='#3a3a46';ctx.fillRect(x+TILE+4,y+H2-1,TILE-8,3); // chaise
+  ctx.fillStyle=WOOD.deskEdge;ctx.fillRect(x,y+H2-7,W3,7);                        // tranche avant (relief)
+  ctx.fillStyle=WOOD.desk;ctx.fillRect(x,y,W3,H2-6);                              // corps plateau
+  ctx.fillStyle=WOOD.deskTop;ctx.fillRect(x,y,W3,4);                              // arête éclairée
+  ctx.fillStyle='rgba(255,255,255,.06)';ctx.fillRect(x,y,W3,1);
+  ctx.fillStyle=WOOD.deskEdge;ctx.fillRect(x+1,y+H2-2,3,3);ctx.fillRect(x+W3-4,y+H2-2,3,3); // pieds
+  ctx.fillStyle='#15151c';ctx.fillRect(x+TILE+6,y+9,3,3);                         // pied écran
+  ctx.fillStyle='#0a0a12';ctx.fillRect(x+TILE,y+1,TILE+2,9);                      // cadre écran
+  ctx.fillStyle=accent||theme.accent;ctx.globalAlpha=.92;ctx.fillRect(x+TILE+1,y+2,TILE,7);ctx.globalAlpha=1;
+  ctx.fillStyle='rgba(255,255,255,.22)';ctx.fillRect(x+TILE+1,y+2,TILE,1);        // reflet dalle
+  ctx.fillStyle='rgba(0,0,0,.4)';for(let i=0;i<3;i++)ctx.fillRect(x+TILE+2,y+4+i*2,(i%2?6:9),1);
+  ctx.fillStyle='#cfd6dd';ctx.fillRect(x+TILE-1,y+12,TILE+3,3);                   // clavier
+  ctx.fillStyle='#aeb6bf';ctx.fillRect(x+TILE*2+4,y+12,3,2);}                     // souris
+function fDualDesk(c,r,accent){fDesk(c,r,accent);const x=c*TILE,y=r*TILE;ctx.fillStyle='#0a0a12';ctx.fillRect(x+1,y+3,TILE-2,TILE-4);ctx.fillStyle=accent||theme.accent;ctx.globalAlpha=.8;ctx.fillRect(x+2,y+4,TILE-4,TILE-7);ctx.globalAlpha=1;}
+function fPlant(c,r){const x=c*TILE,y=r*TILE;
+  ctx.fillStyle='rgba(0,0,0,.22)';ell(x+8,y+14,6,2.2);                            // ombre
+  ctx.fillStyle=WOOD.pot;ctx.fillRect(x+4,y+9,8,5);ctx.fillStyle=shade(WOOD.pot,20);ctx.fillRect(x+4,y+9,8,1); // pot + rebord
+  ctx.fillStyle='#1f5e3a';ctx.beginPath();ctx.arc(x+8,y+6,5,0,7);ctx.fill();      // feuillage sombre
+  ctx.fillStyle=WOOD.plant;ctx.beginPath();ctx.arc(x+6,y+5,3,0,7);ctx.arc(x+10,y+6,3,0,7);ctx.arc(x+8,y+3,3,0,7);ctx.fill();
+  ctx.fillStyle='#46c07a';ctx.beginPath();ctx.arc(x+7,y+4,2,0,7);ctx.fill();}     // reflet feuille
+function fCooler(c,r){const x=c*TILE,y=r*TILE;ctx.fillStyle='#cfe8ff';ctx.fillRect(x+4,y+2,8,6);ctx.fillStyle='#9fd0ff';ctx.fillRect(x+5,y+3,6,4);ctx.fillStyle='#555';ctx.fillRect(x+4,y+8,8,7);}
+function fRack(c,r){const x=c*TILE,y=r*TILE;ctx.fillStyle='#15171f';ctx.fillRect(x+3,y+1,10,14);for(let i=0;i<5;i++){ctx.fillStyle='#222';ctx.fillRect(x+4,y+2+i*2.6,8,2);ctx.fillStyle=i%2?'#3fb950':(theme.neon?'#00eaff':'#e3b341');ctx.fillRect(x+11,y+2+i*2.6,1,1);}}
+function fBoard(c,r){const x=c*TILE,y=r*TILE;ctx.fillStyle='#dfe6ee';ctx.fillRect(x+1,y+1,TILE*3,12);ctx.fillStyle='#3b82f6';ctx.fillRect(x+3,y+3,10,1);ctx.fillRect(x+3,y+6,16,1);ctx.fillStyle='#ef4444';ctx.fillRect(x+3,y+9,8,1);}
+function fCouch(c,r){const x=c*TILE,y=r*TILE;ctx.fillStyle='#36456b';ctx.fillRect(x,y+4,TILE*3,9);ctx.fillStyle='#46588a';ctx.fillRect(x,y+2,TILE*3,4);ctx.fillRect(x,y+2,3,11);ctx.fillRect(x+TILE*3-3,y+2,3,11);ctx.fillStyle='#56699c';for(let i=0;i<3;i++)ctx.fillRect(x+4+i*TILE,y+5,TILE-5,5);}
+function fBookshelf(c,r){const x=c*TILE,y=r*TILE,W2=TILE*2;
+  ctx.fillStyle='rgba(0,0,0,.25)';ctx.fillRect(x+2,y+W2-1,W2,5);                  // ombre
+  ctx.fillStyle='#2a1d11';ctx.fillRect(x,y,W2,W2);                                // caisson
+  ctx.fillStyle='#3f2c1a';ctx.fillRect(x,y,W2,2);                                 // dessus éclairé
+  const cols=['#e3b341','#3fb950','#f85149','#58a6ff','#a371f7','#f778ba'];
+  for(let s=0;s<3;s++){ctx.fillStyle='#140f08';ctx.fillRect(x+1,y+2+s*9+7,W2-2,1); // étagère
+    for(let b=0;b<6;b++){ctx.fillStyle=cols[(s*2+b)%6];const bh=5+((b*7+s)%3);ctx.fillRect(x+2+b*5,y+2+s*9+(7-bh),4,bh);}}}
+function fCoffee(c,r){const x=c*TILE,y=r*TILE;ctx.fillStyle='#222';ctx.fillRect(x+3,y+2,9,11);ctx.fillStyle='#444';ctx.fillRect(x+4,y+4,7,3);ctx.fillStyle=theme.neon?'#00eaff':'#e3b341';ctx.fillRect(x+5,y+8,2,3);ctx.fillStyle='#8b5e3c';ctx.fillRect(x+4,y+11,5,2);}
+function fKanban(c,r){const x=c*TILE,y=r*TILE;ctx.fillStyle='#dfe6ee';ctx.fillRect(x,y,TILE*3,TILE*2-2);const cols=['#f85149','#e3b341','#3fb950'];for(let k=0;k<3;k++)for(let n=0;n<3;n++){ctx.fillStyle=cols[k];ctx.fillRect(x+3+k*15,y+3+n*7,11,5);}}
+function fSmallTable(c,r){const x=c*TILE,y=r*TILE;ctx.fillStyle=WOOD.deskEdge;ell(x+TILE,y+TILE,12,9);ctx.fillStyle=WOOD.deskTop;ell(x+TILE,y+TILE-1,9,6);ctx.fillStyle='#333';ctx.fillRect(x+1,y+TILE-2,3,3);ctx.fillRect(x+2*TILE-4,y+TILE-2,3,3);}
+function fRoom(f){const x=f.c*TILE,y=f.r*TILE,w=f.w*TILE,h=f.h*TILE;ctx.fillStyle=theme.rugEdge;ctx.fillRect(x,y,w,h);ctx.fillStyle=theme.rug;ctx.fillRect(x+3,y+3,w-6,h-6);const cx=x+w/2,cy=y+h/2;ctx.fillStyle=WOOD.deskEdge;ell(cx,cy,w*0.30+4,h*0.26+4);ctx.fillStyle=WOOD.desk;ell(cx,cy,w*0.30,h*0.26);ctx.fillStyle=WOOD.deskTop;ell(cx,cy-2,w*0.26,h*0.20);ctx.fillStyle='#333';for(let a=0;a<6;a++){const ang=a/6*6.28;ctx.fillRect(cx+Math.cos(ang)*(w*0.40)-2,cy+Math.sin(ang)*(h*0.36)-2,4,4);}(f.deco==='kanban'?fKanban:fBoard)(f.c+1,f.r+1);}
+const FURN={desk:fDesk,dual:fDualDesk,plant:fPlant,cooler:fCooler,rack:fRack,board:fBoard,couch:fCouch,book:fBookshelf,coffee:fCoffee,kanban:fKanban,table:fSmallTable,room:fRoom};
 
-            // Dashboard
-            const level = Math.floor(state.xp / 100) + 1;
-            document.getElementById('dashLevel').textContent = `Lv. ${level}`;
-            document.getElementById('xpLabel').textContent = `${state.xp} / ${level * 1000} XP`;
-            document.getElementById('xpFill').style.width = `${(state.xp % 1000) / 10}%`;
+// ═══════════════════ GÉNÉRATION PROCÉDURALE (prompt → bureau) ═══════════════════
+let world={furniture:[],homes:[],council:[],dyn:[],walls:[]};
+// périmètre de murs d'une pièce avec une porte (gap 2 tuiles) sur un côté → différencie les pièces
+function ringTiles(c,r,w,h,door){const t=[],gx=c+Math.floor(w/2)-1,gy=r+Math.floor(h/2)-1;
+  const gapX=n=>n>=gx&&n<gx+2,gapY=n=>n>=gy&&n<gy+2;
+  for(let i=0;i<w;i++){if(!(door==='N'&&gapX(c+i)))t.push([c+i,r]);if(!(door==='S'&&gapX(c+i)))t.push([c+i,r+h-1]);}
+  for(let j=1;j<h-1;j++){if(!(door==='W'&&gapY(r+j)))t.push([c,r+j]);if(!(door==='E'&&gapY(r+j)))t.push([c+w-1,r+j]);}
+  return t;}
+const DEFAULT_OFFICE='startup office: 14 desks, 2 meeting rooms, cafeteria, server room, relax area, plants everywhere';
+function pnum(re,s,def){const m=s.match(re);return m?parseInt(m[1]):def;}
+function genOffice(prompt){
+  const p=(prompt||'').toLowerCase();
+  theme=/cyber|neon|dark|sombre/.test(p)?THEMES.cyber:THEMES.default;
+  const nDesks=Math.max(9,Math.min(60,pnum(/(\d+)\s*(desk|bureau)/,p,14)));
+  const nMeet=Math.max(1,Math.min(5,pnum(/(\d+)\s*(meeting|r[ée]union|salle)/,p,2)));
+  const caf=/cafeteria|cuisine|caf[eé]|cantine|kitchen/.test(p);
+  const srv=/server|serveur|rack|datacenter/.test(p);
+  const relax=/relax|d[ée]tente|repos|lounge|chill|break/.test(p);
+  const lotsPlants=/everywhere|partout|plante|plant|verdure|green/.test(p);
+  const F=[],homes=[],dyn=[],rooms=[];
+  // desk farm (gauche) : cellules 5×5, desk 3×2
+  const farmCmax=COLS-26;
+  let c=2,r=4,placed=0;
+  while(placed<nDesks){F.push({t:placed%5===0?'dual':'desk',c,r});homes.push([c+1,r+2]);placed++;c+=5;if(c+3>farmCmax){c=2;r+=5;if(r+2>ROWS-6)break;}}
+  // salles de réunion (droite, empilées)
+  const mc=COLS-23,mw=20;let my=3;const seats=[];
+  for(let i=0;i<nMeet;i++){F.push({t:'room',c:mc,r:my,w:mw,h:8,deco:i%2?'kanban':'board'});rooms.push({c:mc,r:my,w:mw,h:8,door:'W'});if(i===0){const x=mc+mw/2,yy=my+4;seats.push([x-mw*0.28,yy-1],[x+mw*0.28,yy-1],[x,yy+2]);}my+=10;}
+  // server room (coin bas-droite)
+  if(srv){const sr=ROWS-9,scol=COLS-12;F.push({t:'room',c:scol,r:sr,w:9,h:6,deco:'board'});rooms.push({c:scol,r:sr,w:9,h:6,door:'W'});for(let k=0;k<3;k++)F.push({t:'rack',c:scol+1+k*2,r:sr+1});}
+  // cafétéria + détente (bas-gauche)
+  if(caf){const cr=ROWS-8;F.push({t:'coffee',c:3,r:cr},{t:'coffee',c:5,r:cr},{t:'cooler',c:7,r:cr});for(let k=0;k<3;k++)F.push({t:'table',c:3+k*5,r:cr+2});}
+  if(relax){const rr=ROWS-8,rc=farmCmax-8;F.push({t:'couch',c:rc,r:rr},{t:'couch',c:rc,r:rr+3},{t:'book',c:rc+5,r:rr},{t:'plant',c:rc-2,r:rr});}
+  // plantes éparpillées
+  const np=lotsPlants?22:8;for(let i=0;i<np;i++)F.push({t:'plant',c:2+((i*7)%(COLS-6)),r:3+((i*5)%(ROWS-6))});
+  // bullpen agents générés : bas
+  for(let i=0;i<12;i++)dyn.push([3+(i%6)*3,ROWS-3]);
+  const walls=[];rooms.forEach(rm=>ringTiles(rm.c,rm.r,rm.w,rm.h,rm.door).forEach(t=>walls.push(t)));
+  world={furniture:F,homes,council:seats.length?seats:[[mc+5,my-6],[mc+12,my-6],[mc+9,my-3]],dyn,walls};
+  console.assert(world.homes.length>=9,'genOffice: <9 desks pour les agents!');
+  // replace sprites homes + teleport
+  Object.keys(DEF).forEach((id,i)=>{const s=ensureSprite(id);const[hx,hy]=homeFor(i);s.homeX=hx;s.homeY=hy;s.x=hx;s.y=hy;s.tx=hx;s.ty=hy;});
+  localStorage.setItem('officePrompt',prompt);
+  bakeOffice();resetCam();
+}
+function genPrompt(){const cur=document.getElementById('composer').value.trim();const p=cur||prompt('Décris le bureau à générer :',localStorage.getItem('officePrompt')||DEFAULT_OFFICE);if(p){genOffice(p);if(cur)document.getElementById('composer').value='';}}
 
-            document.getElementById('dashTokens').textContent = `${(state.tokens / 1000000).toFixed(2)}M / 2M`;
-            document.getElementById('tokenFill').style.width = `${(state.tokens / 2000000) * 100}%`;
+// ═══════════════════ TILESET (optionnel) : carte Tiled → vrai pixel-art ═══════════════════
+// Dépose un tileset PNG + une carte 72×48 @16px exportée de Tiled (CSV / non compressé)
+// dans web/assets/ (voir assets/README.txt). Absent → on garde le bureau procédural.
+let TILED=null;
+async function loadTiledOffice(){
+  let map;
+  try{const r=await fetch('assets/office.json',{cache:'no-store'});if(!r.ok)return false;map=await r.json();}catch{return false;}
+  const ts=(map.tilesets||[])[0];if(!ts||!ts.image)return false;
+  const img=new Image();
+  const ok=await new Promise(res=>{img.onload=()=>res(true);img.onerror=()=>res(false);img.src='assets/'+ts.image.replace(/^.*[\\/]/,'');});
+  if(!ok||!img.width)return false;
+  const layers=(map.layers||[]).filter(l=>l.type==='tilelayer'&&Array.isArray(l.data));
+  if(!layers.length){console.warn('Tiled: aucun calque exploitable — exporte en CSV / non compressé.');return false;}
+  TILED={img,tw:map.tilewidth,th:map.tileheight,cols:Math.floor(img.width/map.tilewidth),w:map.width,h:map.height,layers};
+  return true;
+}
+function drawTiled(){const{img,tw,th,cols,layers}=TILED;
+  for(const L of layers){const d=L.data;for(let i=0;i<d.length;i++){const gid=d[i]&0x1FFFFFFF;if(!gid)continue;
+    const id=gid-1,sx=(id%cols)*tw,sy=((id/cols)|0)*th,x=(i%L.width)*tw,y=((i/L.width)|0)*th;
+    ctx.drawImage(img,sx,sy,tw,th,x,y,tw,th);}}}
 
-            document.getElementById('dashCost').textContent = `$${state.cost.toFixed(2)}`;
-            document.getElementById('dashDone').textContent = state.done;
-            document.getElementById('dashStage').textContent = state.stage || '—';
+// ═══════════════════ BAKE OFFICE ═══════════════════
+let officeCanvas=null;
+function drawFloor(){
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const x=c*TILE,y=r*TILE;
+    ctx.fillStyle=r%2?theme.floorB:theme.floorA;ctx.fillRect(x,y,TILE,TILE);     // planches horizontales
+    ctx.fillStyle=theme.floorLine;ctx.fillRect(x,y+TILE-1,TILE,1);              // joint de planche
+    ctx.fillStyle='rgba(255,255,255,.03)';ctx.fillRect(x,y,TILE,1);            // reflet haut
+    if((c+r)%3===0){ctx.fillStyle='rgba(0,0,0,.06)';ctx.fillRect(x+(r%2?9:3),y+2,1,TILE-3);}} // veinage
+  for(let c=0;c<COLS;c++)wallTile(c,0);for(let r=1;r<ROWS;r++){wallTile(0,r);wallTile(COLS-1,r);}for(let c=1;c<COLS-1;c++)wallTile(c,ROWS-1);
+}
+function bakeOffice(){officeCanvas=document.createElement('canvas');
+  officeCanvas.width=TILED?TILED.w*TILED.tw:W;officeCanvas.height=TILED?TILED.h*TILED.th:H;
+  const o=officeCanvas.getContext('2d');const real=ctx;ctx=o;try{
+  if(TILED){drawTiled();}                                                        // vrai tileset si dispo
+  else{
+    drawFloor();
+    for(const f of world.furniture)if(f.t==='room')fRoom(f);                     // tapis des pièces d'abord
+    for(const f of world.furniture)if(f.t!=='room')(FURN[f.t]||(()=>{}))(f.c,f.r,f.accent,f);
+    for(const w of (world.walls||[]))wallTile(w[0],w[1]);                        // murs par-dessus → relief
+  }
+}finally{ctx=real;}}
 
-            // Agents
-            const grid = document.getElementById('agentGrid');
-            grid.innerHTML = '';
+// ═══════════════════ SPRITE (inchangé, dessiné en coords monde) ═══════════════════
+function shade(hex,a){const n=parseInt(hex.slice(1),16);let r=(n>>16)+a,g=((n>>8)&255)+a,b=(n&255)+a;r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b));return`rgb(${r},${g},${b})`;}
+function drawAgent(s){const x=Math.round(s.x),y=Math.round(s.y);const step=s.walking?(Math.floor(frame/6)%2):0;const typing=(s.status==='working'&&!s.walking);
+  ctx.fillStyle='rgba(0,0,0,.32)';ctx.beginPath();ctx.ellipse(x+7,y+21,6,2.2,0,0,7);ctx.fill();
+  const lo=s.walking?(step?2:-2):0;ctx.fillStyle=s.pants||'#222';ctx.fillRect(x+4,y+15,3,5+lo);ctx.fillRect(x+8,y+15,3,5-lo);
+  ctx.fillStyle='#15110d';ctx.fillRect(x+3,y+19+Math.max(0,lo),4,2);ctx.fillRect(x+8,y+19+Math.max(0,-lo),4,2);
+  ctx.fillStyle='#0c0c12';ctx.fillRect(x+2,y+7,11,9);ctx.fillStyle=s.shirt;ctx.fillRect(x+3,y+8,9,7);
+  ctx.fillStyle='rgba(255,255,255,.16)';ctx.fillRect(x+3,y+8,9,2);ctx.fillStyle='rgba(0,0,0,.18)';ctx.fillRect(x+3,y+13,9,2);
+  ctx.fillStyle=s.shirt;
+  if(typing){const t=Math.floor(frame/5)%2;ctx.fillRect(x+1,y+9,3,4);ctx.fillRect(x+11,y+9,3,4);ctx.fillStyle=s.skin;ctx.fillRect(x+1,y+12+(t?0:1),3,2);ctx.fillRect(x+11,y+12+(t?1:0),3,2);}
+  else{const ao=s.walking?(step?1:-1):0;ctx.fillRect(x+1,y+8+ao,3,5);ctx.fillRect(x+11,y+8-ao,3,5);ctx.fillStyle=s.skin;ctx.fillRect(x+1,y+12+ao,3,2);ctx.fillRect(x+11,y+12-ao,3,2);}
+  ctx.fillStyle=shade(s.skin,-20);ctx.fillRect(x+6,y+6,3,2);ctx.fillStyle='#0c0c12';ctx.fillRect(x+3,y,9,8);
+  ctx.fillStyle=s.skin;ctx.fillRect(x+4,y+1,7,6);ctx.fillStyle='rgba(255,255,255,.12)';ctx.fillRect(x+4,y+1,7,1);
+  ctx.fillStyle=s.hair;ctx.fillRect(x+4,y,7,3);ctx.fillRect(x+3,y+1,1,3);ctx.fillRect(x+11,y+1,1,3);
+  const pf=s.facing===2?1:s.facing===1?-1:0;ctx.fillStyle='#fff';ctx.fillRect(x+5,y+3,2,2);ctx.fillRect(x+8,y+3,2,2);ctx.fillStyle='#111';ctx.fillRect(x+5+(pf>0?1:0),y+3,1,2);ctx.fillRect(x+8+(pf>0?1:0),y+3,1,2);
+  ctx.fillStyle=shade(s.skin,-40);ctx.fillRect(x+6,y+5,3,1);drawAcc(s.acc,x,y,s);
+  if(s.status==='working'){ctx.strokeStyle=`rgba(63,185,80,${0.35+Math.sin(frame*0.12)*0.25})`;ctx.lineWidth=1;ctx.strokeRect(x+1,y-1,13,22);}
+}
+function drawAcc(acc,x,y,s){switch(acc){
+  case'glasses':ctx.fillStyle='#111';ctx.fillRect(x+4,y+3,3,2);ctx.fillRect(x+8,y+3,3,2);ctx.fillRect(x+7,y+3,1,1);break;
+  case'hardhat':ctx.fillStyle='#f4c20d';ctx.fillRect(x+3,y-1,9,3);ctx.fillRect(x+5,y-2,5,1);break;
+  case'cap':ctx.fillStyle='#e8511f';ctx.fillRect(x+3,y,8,2);ctx.fillRect(x+10,y+1,3,1);break;
+  case'headset':ctx.fillStyle='#222';ctx.fillRect(x+3,y+1,1,4);ctx.fillRect(x+3,y,8,1);ctx.fillStyle='#3fb950';ctx.fillRect(x+3,y+4,2,2);ctx.fillStyle='#222';ctx.fillRect(x+2,y+3,1,2);break;
+  case'labcoat':ctx.fillStyle='#eef2f6';ctx.fillRect(x+3,y+8,9,7);ctx.fillStyle=s.shirt;ctx.fillRect(x+6,y+8,3,5);ctx.fillStyle='#cfd6dd';ctx.fillRect(x+3,y+8,9,1);break;
+  case'shield':ctx.fillStyle='#dc2626';ctx.fillRect(x+11,y+9,4,5);ctx.fillStyle='#fff';ctx.fillRect(x+12,y+10,2,1);ctx.fillRect(x+12,y+10,1,3);break;
+  case'magnify':ctx.strokeStyle='#cbd5e1';ctx.lineWidth=1;ctx.beginPath();ctx.arc(x+14,y+10,2.5,0,7);ctx.stroke();ctx.strokeStyle='#94a3b8';ctx.beginPath();ctx.moveTo(x+15,y+12);ctx.lineTo(x+16,y+14);ctx.stroke();break;
+  case'wrench':ctx.fillStyle='#9aa4b0';ctx.fillRect(x+13,y+9,1,5);ctx.fillRect(x+12,y+8,3,2);break;
+  case'clipboard':ctx.fillStyle='#cbb687';ctx.fillRect(x+12,y+9,4,6);ctx.fillStyle='#fff';ctx.fillRect(x+12,y+10,4,4);ctx.fillStyle='#555';ctx.fillRect(x+13,y+11,2,1);ctx.fillRect(x+13,y+13,2,1);break;
+}}
+function drawCouncilGlow(){const c=activeCouncil();if(!c||!world.council.length)return;const s=world.council;const x0=Math.min(...s.map(p=>p[0]))-2,y0=Math.min(...s.map(p=>p[1]))-2,x1=Math.max(...s.map(p=>p[0]))+3,y1=Math.max(...s.map(p=>p[1]))+3;ctx.fillStyle='rgba(240,136,62,.08)';ctx.fillRect(x0*TILE,y0*TILE,(x1-x0)*TILE,(y1-y0)*TILE);}
 
-            for (const [name, agent] of Object.entries(state.agents)) {
-                const pos = POSITIONS[name];
-                const div = document.createElement('div');
-                div.className = `agent ${agent.status}`;
-                div.style.left = pos.x + 'px';
-                div.style.top = pos.y + 'px';
+// ═══════════════════ MOVE + PARTICLES ═══════════════════
+function moveAll(){Object.values(sprites).forEach(s=>{const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);if(d>1){s.walking=true;s.x+=dx/d*0.8;s.y+=dy/d*0.8;s.facing=Math.abs(dx)>Math.abs(dy)?(dx>0?2:1):(dy>0?0:3);}else{s.walking=false;s.x=s.tx;s.y=s.ty;}});}
+let parts=[];
+function burst(){const s=Object.values(sprites).find(x=>x.status==='done')||Object.values(sprites)[0];if(!s)return;for(let i=0;i<34;i++)parts.push({x:s.x+7,y:s.y+8,vx:(Math.random()-.5)*3,vy:-Math.random()*3-1,life:40,c:['#3fb950','#e3b341','#58a6ff'][i%3]});}
+function drawParts(){parts=parts.filter(p=>p.life>0);parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.12;p.life--;ctx.globalAlpha=p.life/40;ctx.fillStyle=p.c;ctx.fillRect(p.x,p.y,2,2);ctx.globalAlpha=1;});}
 
-                const avatar = document.createElement('div');
-                avatar.className = 'agent-avatar';
-                avatar.textContent = pos.desk;
+// ═══════════════════ OVERLAY (HTML net, suit la caméra) ═══════════════════
+const els={};
+function makeEls(id){const label=document.createElement('div');label.className='ag-label';label.innerHTML='<span class="an"></span><span class="ar"></span>';label.onclick=()=>openInspector(id);const bubble=document.createElement('div');bubble.className='bubble';bubble.innerHTML='<span class="bt"></span><span class="tail"></span>';bubble.style.display='none';const ov=document.getElementById('overlay');ov.appendChild(label);ov.appendChild(bubble);return els[id]={label,bubble};}
+function activeCouncil(){if(state&&state.council&&state.council.active)return state.council;if(localCouncil&&localCouncil.active){if(frame>localCouncil.until)localCouncil=null;else return localCouncil;}return null;}
+function sx(wx){return (wx-cam.x)*cam.scale;} function sy(wy){return (wy-cam.y)*cam.scale;}
+function syncOverlay(){const council=activeCouncil();const seen=new Set();
+  Object.values(sprites).forEach(s=>{seen.add(s.id);const g=els[s.id]||makeEls(s.id);
+    const px=sx(s.x+7),py=sy(s.y+23),pct=px/VW*100,pyt=py/VH*100;
+    const vis=px>-40&&px<VW+40&&py>-40&&py<VH+40;
+    g.label.style.display=vis?'block':'none';
+    if(vis){g.label.style.left=pct+'%';g.label.style.top=pyt+'%';g.label.querySelector('.an').textContent=nameOf(s.id);g.label.querySelector('.ar').textContent=roleOf(s.id);g.label.className='ag-label'+(s.status==='working'?' on':'')+(s.dynamic?' gen':'');}
+    let txt='',idea=false;
+    if(council){const k=(council.ideas||[]).filter(x=>x.member===s.id).slice(-1)[0];if(k){txt=k.text;idea=true;}}
+    if(!txt&&s.status==='working'&&s.action)txt=`${s.action.verb} ${s.action.detail||''}`.trim();
+    if(txt&&vis){g.bubble.style.display='block';g.bubble.style.left=(sx(s.x+7)/VW*100)+'%';g.bubble.style.top=(sy(s.y-1)/VH*100)+'%';g.bubble.className='bubble'+(idea?' idea':'');g.bubble.querySelector('.bt').textContent=(idea?'💡 ':'')+txt;}
+    else g.bubble.style.display='none';
+  });
+  Object.keys(els).forEach(id=>{if(!seen.has(id)){els[id].label.remove();els[id].bubble.remove();delete els[id];}});
+}
 
-                const info = document.createElement('div');
-                info.className = 'agent-info';
-                info.textContent = `${agent.tokens || 0} tok`;
+// ═══════════════════ MINIMAP ═══════════════════
+const mini=document.getElementById('mini'),mctx=mini.getContext('2d');
+const MW=mini.width,MH=mini.height,msx=MW/W,msy=MH/H;
+function drawMini(){mctx.clearRect(0,0,MW,MH);if(officeCanvas)mctx.drawImage(officeCanvas,0,0,MW,MH);
+  Object.values(sprites).forEach(s=>{mctx.fillStyle=s.status==='working'?'#3fb950':(s.dynamic?'#a371f7':'#9fb3c8');mctx.fillRect(s.x*msx-1,s.y*msy-1,3,3);});
+  // viewport rect
+  mctx.strokeStyle='rgba(88,166,255,.9)';mctx.lineWidth=1;mctx.strokeRect(cam.x*msx,cam.y*msy,(VW/cam.scale)*msx,(VH/cam.scale)*msy);}
+mini.addEventListener('click',e=>{const r=mini.getBoundingClientRect();const wx=(e.clientX-r.left)/r.width*W,wy=(e.clientY-r.top)/r.height*H;follow=null;cam.tx=wx-VW/cam.tscale/2;cam.ty=wy-VH/cam.tscale/2;});
 
-                const nameEl = document.createElement('div');
-                nameEl.className = 'agent-name';
-                nameEl.textContent = name.replace('-', '\n');
+// ═══════════════════ RENDER LOOP + caméra ═══════════════════
+let frame=0;
+function updateCam(){
+  if(follow&&sprites[follow]){const s=sprites[follow];cam.tx=s.x+7-(VW/cam.tscale)/2;cam.ty=s.y+10-(VH/cam.tscale)/2;}
+  cam.scale+=(cam.tscale-cam.scale)*0.18;cam.x+=(cam.tx-cam.x)*0.18;cam.y+=(cam.ty-cam.y)*0.18;
+  cam.x=clampAxis(cam.x,W,VW/cam.scale);cam.y=clampAxis(cam.y,H,VH/cam.scale);
+  cam.tx=clampAxis(cam.tx,W,VW/cam.tscale);cam.ty=clampAxis(cam.ty,H,VH/cam.tscale);
+}
+function tick(){try{
+  frame++;updateCam();ctx.clearRect(0,0,VW,VH);
+  ctx.save();ctx.setTransform(cam.scale,0,0,cam.scale,-cam.x*cam.scale,-cam.y*cam.scale);
+  if(officeCanvas)ctx.drawImage(officeCanvas,0,0);
+  moveAll();drawCouncilGlow();
+  Object.values(sprites).sort((a,b)=>a.y-b.y).forEach(drawAgent);
+  drawParts();ctx.restore();
+  syncOverlay();drawMini();
+  if(inspId&&document.getElementById('inspector').classList.contains('show'))refreshInspector();
+}catch(e){}}
+function loop(){setInterval(tick,33);}
 
-                div.appendChild(avatar);
-                div.appendChild(info);
-                div.appendChild(nameEl);
+// ═══════════════════ STATE SYNC ═══════════════════
+let state=null,prevDone=null,prevRunning=false,prevQ=false,runStartTok=0,localCouncil=null,lastErrT=null;
+async function sync(){try{const r=await fetch(STATE_URL,{cache:'no-store'});if(!r.ok)throw 0;state=await r.json();applyState(state);setConn(true);}catch{setConn(false);}}
 
-                grid.appendChild(div);
-            }
+// Le serveur POUSSE l'état à chaque changement (~150 ms) au lieu d'être interrogé
+// chaque seconde : les agents bougent en direct et on ne martèle plus le disque.
+// Si le flux tombe (serveur coupé), on repasse au polling ; EventSource retente
+// tout seul, et le premier événement 'state' reçu recoupe le polling.
+let es=null,pollTimer=null;
+function startPolling(){if(pollTimer)return;pollTimer=setInterval(sync,1000);sync();}
+function stopPolling(){if(pollTimer){clearInterval(pollTimer);pollTimer=null;}}
+function startSSE(){
+  if(!window.EventSource)return startPolling();
+  try{es=new EventSource(ORIGIN+'/events');}catch{return startPolling();}
+  es.addEventListener('state',e=>{
+    stopPolling();
+    try{state=JSON.parse(e.data);applyState(state);setConn(true);}catch{}
+  });
+  es.onopen=()=>{stopPolling();setConn(true);};
+  es.onerror=()=>{setConn(false);startPolling();};
+}
+function setConn(ok){const e=document.getElementById('conn');e.className='conn '+(ok?'conn-on':'conn-off');e.textContent=ok?'● LIVE':'● OFFLINE';}
+function applyState(st){
+  const ids=Object.keys(st.agents||{});
+  ids.forEach(id=>{const a=st.agents[id];const s=ensureSprite(id);s.status=a.status||'idle';s.action=a.action||null;s.tokens=a.tokens||0;s.task=a.task;
+    if(a.status==='working'||a.status==='done'){s.tx=s.homeX;s.ty=s.homeY;}
+    else if(!s.walking&&Math.random()<0.004){s.tx=s.homeX+(Math.random()-.5)*TILE*2;s.ty=s.homeY+(Math.random()-.5)*TILE*1.5;}
+  });
+  if(st.council&&st.council.active){(st.council.members||[]).forEach((m,i)=>{const s=sprites[m],seat=world.council[i%world.council.length];if(s&&seat){s.tx=seat[0]*TILE;s.ty=seat[1]*TILE;}});}
+  if(st.running&&!prevRunning){runStartTok=st.tokens;}prevRunning=st.running;
+  // recentrage caméra quand le PO demande validation
+  const hasQ=st.questions&&st.questions.length;if(hasQ&&!prevQ){follow=null;const s=sprites['reporter-po'];if(s){cam.tscale=2;cam.tx=s.x+7-VW/2/2;cam.ty=s.y+10-VH/2/2;}}prevQ=hasQ;
 
-            // Ticket
-            const ticketEl = document.createElement('div');
-            ticketEl.className = 'ticket';
-            ticketEl.textContent = `#${state.ticket}`;
-            const stageIndex = Object.keys(POSITIONS).indexOf(
-                state.stage ? state.stage.split(' ')[0] : 'reporter-po'
-            );
-            const nextPos = Object.values(POSITIONS)[Math.max(0, stageIndex)];
-            ticketEl.style.left = nextPos.x + 'px';
-            ticketEl.style.top = nextPos.y + 40 + 'px';
-            grid.appendChild(ticketEl);
+  const lv=Math.floor(st.xp/100)+1;
+  setT('dLv','Lv. '+lv);setWi('xpF',(st.xp%100)+'%');setT('xpL',(st.xp%100)+' / 100 XP · '+st.xp+' total');
+  setT('dTok',Number(st.tokens).toLocaleString());setWi('tokF',Math.min(100,st.tokens/2000000*100)+'%');setT('tokSub',Math.max(0,st.tokens-runStartTok).toLocaleString()+' ce run · sur 2M');
+  setT('tokBreak','in '+(st.tokens_in||0).toLocaleString()+' · out '+(st.tokens_out||0).toLocaleString()+' · cache '+(st.tokens_cache||0).toLocaleString());
+  setT('dCost','$'+Number(st.cost).toFixed(2));setT('costSub','$'+(st.done?st.cost/st.done:0).toFixed(2)+'/ticket');
+  setT('dDone',st.done);setT('ticketSub','ticket #'+st.ticket);setT('dMode',st.mode||'—');setT('runSub',st.running?'● en cours':'au repos');
+  const active=ids.filter(id=>st.agents[id].status==='working').length,gen=ids.filter(id=>st.agents[id].dynamic).length;
+  setT('dActive',active+' / '+ids.length);setT('genSub',gen+' générés');setT('dStage',st.stage||'—');setT('modePill','mode: '+(st.mode||'pipeline'));setT('reqSub',st.request||'—');
+  // bandeau d'erreur (quota / tokens Claude épuisés) — affiché une fois par erreur, fermable
+  const eb=document.getElementById('errbar');
+  if(st.error&&st.error.t!==lastErrT){eb.textContent='⛔ '+st.error.msg+'  · clic pour fermer';eb.classList.add('show');lastErrT=st.error.t;}
+  if(!st.error){eb.classList.remove('show');lastErrT=null;}
+  const al=document.getElementById('alist');al.innerHTML='';
+  ids.forEach(id=>{const a=st.agents[id];const d=document.createElement('div');d.className='ai '+(a.status||'');const act=a.action?`${a.action.verb} ${a.action.detail||''}`:'';d.innerHTML=`<span class="dot"></span><span class="nm">${nameOf(id)} <small>${roleOf(id)}</small></span><span class="act">${act}</span>`;d.onclick=()=>openInspector(id);al.appendChild(d);});
+  const fd=document.getElementById('feed');fd.innerHTML='';(st.feed||[]).slice(0,12).forEach(f=>{const e=document.createElement('span');e.className='fi';e.innerHTML=`<b>${nameOf(f.agent)||f.agent}</b> <i>${f.verb}</i> ${f.detail||''}`;fd.appendChild(e);});
+  renderPipeline();
+  const qp=document.getElementById('qpanel');if(hasQ){document.getElementById('qlist').innerHTML=st.questions.map(q=>`<div class="q">${q}</div>`).join('');qp.classList.add('show');}else qp.classList.remove('show');
+  if(prevDone!==null&&st.done>prevDone)burst();prevDone=st.done;
+}
+function setT(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}function setWi(id,v){const e=document.getElementById(id);if(e)e.style.width=v;}
+function renderPipeline(){const el=document.getElementById('pipeline');const ids=Object.keys(DEF);const active=ids.findIndex(id=>sprites[id]&&sprites[id].status==='working');el.innerHTML=ids.map((id,i)=>{const cls=i===active?'on':(active>=0&&i<active?'past':'');return `<span class="pstep ${cls}">${roleOf(id)}</span>`;}).join('<span class="parr">›</span>');}
 
-            // Status bar
-            document.getElementById('statusBar').textContent =
-                `Ticket #${state.ticket} · Done: ${state.done} · Tokens: ${state.tokens.toLocaleString()}`;
+// ═══════════════════ CONTROLS ═══════════════════
+function isReal(){return document.getElementById('realChk').checked;}
+async function run(flow,request,agent){if(isReal()&&!confirm(`🔥 VRAIS agents — ${flow}${agent?' · '+agent:''}\n\n"${request}"\n\nIls vont agir pour de vrai. Continuer ?`))return;try{const j=await post('/run',{flow,mode:isReal()?'real':'demo',request,agent:agent||''});if(j&&j.error)alert('Échec: '+j.error);}catch(e){alert('Échec: '+e.message);}}
+function sendComposer(){const i=document.getElementById('composer');const v=i.value.trim();if(!v)return;const f=document.getElementById('flowSel').value;if(DEF[f]||sprites[f])run('single',v,f);else run(f,v);i.value='';}
+document.getElementById('composer').addEventListener('keydown',e=>{if(e.key==='Enter')sendComposer();});
+function answerPO(){const ans=document.getElementById('qans').value.trim();const base=(state&&state.request)||'';run('route',base+(ans?(' — Réponses: '+ans):''));document.getElementById('qpanel').classList.remove('show');document.getElementById('qans').value='';}
+function showCouncil(){const members=['architect-lead','reviewer','security-reviewer'];const ideas=[{member:'architect-lead',text:'Isoler derrière une interface, réversible.'},{member:'reviewer',text:'Risque de dette si on duplique la logique.'},{member:'security-reviewer',text:'Valider les entrées, sinon injection.'}];localCouncil={active:true,members,ideas,until:frame+300};members.forEach((m,i)=>{const s=sprites[m],seat=world.council[i%world.council.length];if(s&&seat){s.tx=seat[0]*TILE;s.ty=seat[1]*TILE;}});follow='architect-lead';cam.tscale=1.6;}
 
-            // Agent list
-            const agentList = document.getElementById('agentList');
-            agentList.innerHTML = '';
-            for (const [name, agent] of Object.entries(state.agents)) {
-                const item = document.createElement('div');
-                item.className = `agent-list-item ${agent.status}`;
-                item.textContent = `${name}: ${agent.status} (${agent.tokens || 0}tok)`;
-                agentList.appendChild(item);
-            }
-        }
+// inspector
+let inspId=null;
+function openInspector(id){inspId=id;document.getElementById('flowSel').value=DEF[id]?id:'route';document.getElementById('inspector').classList.add('show');refreshInspector();document.getElementById('iTask').value='';follow=id;cam.tscale=Math.max(cam.tscale,2);}
+function closeInspector(){document.getElementById('inspector').classList.remove('show');inspId=null;follow=null;}
+function refreshInspector(){if(!inspId)return;const s=sprites[inspId];const a=(state&&state.agents&&state.agents[inspId])||{};const nm=document.getElementById('iName');if(document.activeElement!==nm)nm.value=nameOf(inspId);setT('iRole',roleOf(inspId)+(s&&s.dynamic?' · généré':''));setT('iStatus',a.status||'idle');setT('iTokens',(a.tokens||0).toLocaleString());setT('iModel',(edAgents.find(x=>x.name===inspId)||{}).model||'—');setT('iTask2',a.task||'—');setT('iAction',a.action?`${a.action.verb} ${a.action.detail||''}`:(a.status==='working'?'…':'au repos'));
+  const log=document.getElementById('iLog');const items=((state&&state.feed)||[]).filter(f=>f.agent===inspId).slice(0,6);
+  log.innerHTML=items.length?items.map(f=>`<li><b>${f.verb}</b> ${f.detail||''}</li>`).join(''):'<li>—</li>';}
+function saveInspName(){if(inspId)setName(inspId,document.getElementById('iName').value);}
+function inspSend(){const t=document.getElementById('iTask').value.trim();if(!t||!inspId)return;run('single',t,inspId);document.getElementById('iTask').value='';}
+function inspEdit(){if(inspId){openEditor();setTimeout(()=>loadAgent(inspId),250);}}
 
-        async function launchOrchestrator(mode) {
-            const request = prompt(
-                mode === 'real'
-                    ? '🔥 VRAIS agents (consomme ton abonnement, code dans ~/taicorp-studio).\nDécris le ticket :'
-                    : '▶ Démo (aucun token). Décris le ticket :',
-                'Ajoute un endpoint /health'
-            );
-            if (!request) return;
-            if (mode === 'real' && !confirm('Lancer les 9 vrais agents sur :\n\n"' + request + '"\n\nIls vont écrire du code pour de vrai. Continuer ?')) return;
+// canvas : clic = sélection agent ; drag = pan ; molette = zoom
+let drag=null;
+canvas.addEventListener('mousedown',e=>{drag={x:e.clientX,y:e.clientY,cx:cam.tx,cy:cam.ty,moved:false};canvas.classList.add('drag');});
+window.addEventListener('mousemove',e=>{if(!drag)return;const r=canvas.getBoundingClientRect();const sc=cam.scale*(r.width/VW);const dx=(e.clientX-drag.x)/sc,dy=(e.clientY-drag.y)/sc;if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>4){drag.moved=true;follow=null;cam.tx=drag.cx-dx;cam.ty=drag.cy-dy;cam.x=cam.tx;cam.y=cam.ty;}});
+window.addEventListener('mouseup',e=>{if(!drag){return;}canvas.classList.remove('drag');if(!drag.moved){const r=canvas.getBoundingClientRect();const vx=(e.clientX-r.left)*(VW/r.width),vy=(e.clientY-r.top)*(VH/r.height);const wx=cam.x+vx/cam.scale,wy=cam.y+vy/cam.scale;let best=null,bd=20;Object.values(sprites).forEach(s=>{const d=Math.hypot(s.x+7-wx,s.y+10-wy);if(d<bd){bd=d;best=s;}});if(best)openInspector(best.id);}drag=null;});
+canvas.addEventListener('wheel',e=>{e.preventDefault();const r=canvas.getBoundingClientRect();const vx=(e.clientX-r.left)*(VW/r.width),vy=(e.clientY-r.top)*(VH/r.height);zoomBy(e.deltaY<0?1.15:0.87,vx,vy);},{passive:false});
+window.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&(e.key==='='||e.key==='+')){e.preventDefault();zoomBy(1.25);}if((e.ctrlKey||e.metaKey)&&e.key==='-'){e.preventDefault();zoomBy(0.8);}});
 
-            const btn = mode === 'real' ? document.getElementById('realBtn') : document.getElementById('newTicketBtn');
-            const label = btn.textContent;
-            btn.textContent = '⏳ Lancement...';
-            btn.disabled = true;
-            try {
-                const r = await fetch(ORIGIN + '/run?mode=' + mode + '&request=' + encodeURIComponent(request));
-                const data = await r.json();
-                console.log('Pipeline lancé:', data);
-            } catch (e) {
-                alert('Échec du lancement : ' + e.message + '\n\nLe serveur (engine/server.py) tourne-t-il ?');
-            } finally {
-                setTimeout(() => { btn.textContent = label; btn.disabled = false; }, 2000);
-            }
-        }
+// ═══════════════════ EDITOR ═══════════════════
+let edAgents=[],edSel=null;
+async function openEditor(){document.getElementById('edOverlay').classList.add('show');try{edAgents=(await (await fetch(ORIGIN+'/agents')).json()).agents||[];renderEdList();}catch(e){document.getElementById('edList').innerHTML='<div class="hint">Serveur injoignable</div>';}}
+function closeEditor(){document.getElementById('edOverlay').classList.remove('show');}
+function renderEdList(){const el=document.getElementById('edList');el.innerHTML='';edAgents.forEach(a=>{const d=document.createElement('div');d.className='eli'+(edSel===a.name?' sel':'');d.innerHTML=`${nameOf(a.name)} <small>${a.name} · ${a.model} · ${a.tools.length} tools${a.generated?' · ✦':''}</small>`;d.onclick=()=>loadAgent(a.name);el.appendChild(d);});}
+async function loadAgent(name){edSel=name;renderEdList();setT('edMsg','');document.getElementById('edText').value=(await (await fetch(ORIGIN+'/agent?name='+encodeURIComponent(name))).json()).content||'';}
+function newAgent(){edSel=null;renderEdList();document.getElementById('edText').value=`---\nname: mon-agent\ndescription: >\n  Décris ici quand activer cet agent.\ntools: [Read, Grep, Glob, Write, Edit, Bash]\nmodel: claude-sonnet-4-6\ntemperature: 0.2\n---\n\n# mon-agent\n\n## Mission\nÉcris ici le rôle et les règles.\n`;setT('edMsg','nouveau — renomme via name:');}
+async function saveAgent(){const content=document.getElementById('edText').value;const m=content.match(/name:\s*([^\n]+)/);const name=(m?m[1]:'').trim()||edSel;if(!name){document.getElementById('edMsg').innerHTML='<span style="color:#f85149">name: manquant</span>';return;}const j=await post('/agent',{name,content});document.getElementById('edMsg').innerHTML=j.saved?`<span style="color:#3fb950">✓ sauvé (${j.file})</span>`:`<span style="color:#f85149">✗ ${j.error||'erreur'}</span>`;if(j.saved){edAgents=(await (await fetch(ORIGIN+'/agents')).json()).agents||[];edSel=name;renderEdList();}}
 
-        function convokCouncil() {
-            if (!lastState) return;
-
-            const grid = document.getElementById('agentGrid');
-            const council = document.createElement('div');
-            council.className = 'council-room';
-
-            const title = document.createElement('div');
-            title.className = 'council-title';
-            title.textContent = '⚖ LLM COUNCIL';
-
-            const members = document.createElement('div');
-            members.className = 'council-members';
-
-            ['architect-lead', 'reviewer', 'security-reviewer'].forEach(name => {
-                const m = document.createElement('div');
-                m.className = 'council-member';
-                const avatar = document.createElement('div');
-                avatar.className = 'council-member-avatar';
-                avatar.textContent = POSITIONS[name].desk;
-                m.appendChild(avatar);
-                const nameEl = document.createElement('div');
-                nameEl.textContent = name.split('-')[0];
-                m.appendChild(nameEl);
-                members.appendChild(m);
-            });
-
-            council.appendChild(title);
-            council.appendChild(members);
-            grid.appendChild(council);
-
-            setTimeout(() => council.remove(), 3000);
-        }
-
-        // Speed control
-        document.querySelectorAll('.speed-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-                gameSpeed = parseFloat(e.target.dataset.speed);
-            });
-        });
-
-        // Start polling
-        setInterval(fetchState, FETCH_INTERVAL / gameSpeed);
-
-        // Initial fetch
-        fetchState();
-    </script>
+// ═══════════════════ INIT ═══════════════════
+genOffice(localStorage.getItem('officePrompt')||DEFAULT_OFFICE);
+fitCanvas();sync();startSSE();loop();
+loadTiledOffice().then(ok=>{if(ok){bakeOffice();resetCam();console.log('✓ tileset Tiled chargé');}});
+fetch(ORIGIN+'/agents').then(r=>r.json()).then(j=>{edAgents=j.agents||[];}).catch(()=>{});
+</script>
 </body>
 </html>

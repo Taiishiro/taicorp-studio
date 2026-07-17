@@ -75,28 +75,75 @@ L'orchestrateur Python qui fait **réellement** tourner les agents et alimente l
 |---|---|
 | `agents_loader.py` | Charge les 9 agents depuis `.claude/agents/` (modèle, outils, prompt) |
 | `orchestrator.py` | Enchaîne le pipeline + boucle de feedback via le **Claude Agent SDK** |
-| `bus.py` | Écrit l'état live dans `engine/state/state.json` + `events.jsonl` |
-| `server.py` | Sert l'état au jeu (CORS, no-cache) sur `http://localhost:8765` |
+| `router.py` | Langage naturel → agent ; appel d'outil → action lisible à l'écran |
+| `bus.py` | Écrit l'état live (`state.json` atomique + `events.jsonl` append-only) |
+| `server.py` | Sert l'UI, pousse l'état en **SSE**, lance les flows — `127.0.0.1:8765` |
+| `tests/` | Les garanties du pipeline et du Council, sans clé API ni tokens |
 
 ### Lancer
 
 ```bash
-cd engine
-pip install -r requirements.txt
-cp .env.example .env          # mets ta clé ANTHROPIC_API_KEY
+python -m venv .venv && source .venv/bin/activate
+pip install -r engine/requirements.txt
+cp engine/.env.example .env        # mets ta clé ANTHROPIC_API_KEY
 
-# Mode démo (aucun token brûlé) — pour voir state.json bouger en direct :
-python orchestrator.py --demo "Ajoute un login Google"
-
-# Mode réel (les vrais agents tournent) :
-python orchestrator.py "Ajoute un login Google"
+python engine/server.py            # → http://localhost:8765/web/index.html
 ```
 
-> ⚠️ Le mode réel utilise `permission_mode="bypassPermissions"` : les agents codeurs/git/devops auto-approuvent leurs actions. **À lancer sur une branche jetable ou un sandbox.**
+Le studio s'ouvre sur le plateau : tu tapes une demande, tu choisis le flow, et tu
+regardes les 9 agents travailler. **Décoche « réel » pour rester en démo** : le
+pipeline se joue en entier, sans appeler l'API ni brûler un seul token.
 
-### Comment le jeu se branche
+En ligne de commande, sans interface :
 
-Le moteur écrit `engine/state/state.json` à chaque étape :
+```bash
+python engine/orchestrator.py --demo "Ajoute un login Google"   # simulation
+python engine/orchestrator.py "Ajoute un login Google"          # vrais agents
+python engine/orchestrator.py --flow route "mets ça sur mon github"
+python engine/orchestrator.py --flow meta  "j'ai besoin d'un agent qui traduit la doc"
+```
+
+### Tests
+
+```bash
+pip install pytest && python -m pytest engine/tests -q
+```
+
+Ils verrouillent ce que ce README promet : qu'un verdict bloquant **n'est jamais**
+livré, que toute correction repasse devant les gardiens, que le Council délibère
+réellement en mode réel, et que `state.json` n'est jamais lisible à moitié écrit.
+L'exécution des agents est stubbée → aucun token consommé.
+
+## 🔒 Sécurité — à lire avant de lancer
+
+**`/run` exécute du code arbitraire, par conception.** Le mode réel lance les agents
+avec `permission_mode="bypassPermissions"` et l'outil `Bash` sur ce dossier : ils
+auto-approuvent leurs actions. C'est le but du projet, et c'est aussi son danger.
+
+Le serveur est donc verrouillé, et ces choix ne sont pas négociables :
+
+| Garde-fou | Pourquoi |
+|---|---|
+| Bind sur `127.0.0.1` | Le réseau local n'atteint pas le studio |
+| Aucun en-tête CORS | Une page tierce ne peut pas lire nos réponses |
+| Mutations en `POST` uniquement | Tue le drive-by `<img src="/run?…">` |
+| Jeton `X-Studio-Token` | Illisible cross-origin ; le préflight échoue sans CORS |
+| `Origin`/`Referer` vérifiés | Rejette les requêtes d'une autre page |
+| Chemins cachés bloqués | `/.env`, `/.git/…` ne sont jamais servis |
+
+Ce qu'il ne faut **jamais** faire :
+
+- exposer le port `8765` sur une interface publique (`STUDIO_HOST` existe pour le
+  cas Docker, où le conteneur isole — pas pour ouvrir sur Internet) ;
+- publier `8765:8765` dans un `docker-compose` (utilise `127.0.0.1:8765:8765`) ;
+- lancer le mode réel sur une branche à laquelle tu tiens. **Branche jetable ou
+  conteneur**, toujours.
+
+Une faille ? Voir [SECURITY.md](SECURITY.md).
+
+### Comment le plateau se branche
+
+Le bus écrit `engine/state/state.json` à chaque étape :
 
 ```json
 { "ticket": 142, "stage": "senior-coder travaille", "tokens": 410000,
@@ -104,4 +151,17 @@ Le moteur écrit `engine/state/state.json` à chaque étape :
   "agents": { "senior-coder": { "status": "working", "tokens": 320000 }, ... } }
 ```
 
-**Prochaine étape** : transformer le plateau pixel-art (la maquette du chat) en `web/index.html` qui `fetch()` ce `state.json` toutes les ~1 s → les agents bougent avec les **vraies** données (statut réel, tokens réels, étape réelle).
+`server.py` surveille ce fichier et **pousse** chaque changement au navigateur par
+SSE (`/events`, ~150 ms). Le front n'interroge plus le serveur chaque seconde : il
+écoute. Si le flux tombe, il repasse tout seul en polling sur `state.json`.
+
+En mode réel, chaque `ToolUseBlock` du SDK est traduit en action lisible
+(`Edit{file_path:"engine/server.py"}` → **« modifie server.py · handle_run() »**),
+donc ce que tu vois à l'écran est littéralement ce que l'agent est en train de faire.
+
+### Le décor
+
+Le plateau est procédural par défaut — aucun asset requis, ça tourne tel quel.
+Pour un vrai rendu pixel-art avec ton propre tileset, voir
+[`web/assets/README.txt`](web/assets/README.txt) : la carte se peint dans Tiled et
+se dépose ici. Absent ou cassé → repli automatique sur le bureau procédural.

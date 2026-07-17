@@ -1,0 +1,20 @@
+services:
+  studio:
+    build: .
+    ports:
+      # ⚠️ Publié sur 127.0.0.1 UNIQUEMENT — jamais "8765:8765".
+      # /run exécute de vrais agents avec bypassPermissions : exposer ce port sur
+      # le réseau revient à offrir un shell sur la machine.
+      - "127.0.0.1:8765:8765"
+    environment:
+      # Dans le conteneur il FAUT écouter sur 0.0.0.0 : le mapping Docker
+      # n'atteint pas le 127.0.0.1 interne. L'isolation vient du bind ci-dessus.
+      - STUDIO_HOST=0.0.0.0
+    env_file:
+      - .env
+    volumes:
+      # État persistant accessible depuis l'hôte (state.json alimente l'UI)
+      - ./engine/state:/app/engine/state
+      # Mode réel via `claude login` (optionnel — commenter si tu utilises ANTHROPIC_API_KEY)
+      # - ${HOME}/.claude:/root/.claude:ro
+    restart: unless-stopped
