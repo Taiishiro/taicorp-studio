@@ -1,0 +1,12 @@
+# Sorties de rendu (lourdes) — jamais versionnées
+output/
+# Fiches perso locales (copiées depuis examples/ au premier run)
+characters/
+# Environnements
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# ComfyUI installé par scripts/setup.sh
+ComfyUI/
+*.egg-info/

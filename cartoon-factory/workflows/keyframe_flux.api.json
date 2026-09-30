@@ -1,0 +1,85 @@
+{
+  "1": {
+    "class_type": "UnetLoaderGGUF",
+    "_meta": {"title": "Flux.1-dev GGUF (ComfyUI-GGUF)"},
+    "inputs": {"unet_name": "__FLUX_UNET_GGUF__"}
+  },
+  "2": {
+    "class_type": "DualCLIPLoaderGGUF",
+    "_meta": {"title": "CLIP-L + T5 GGUF"},
+    "inputs": {"clip_name1": "__FLUX_CLIP_L__", "clip_name2": "__FLUX_T5_GGUF__", "type": "flux"}
+  },
+  "3": {
+    "class_type": "VAELoader",
+    "_meta": {"title": "VAE Flux"},
+    "inputs": {"vae_name": "__FLUX_VAE__"}
+  },
+  "4": {
+    "class_type": "LoraLoader",
+    "_meta": {"title": "LoRA style crayon (retiré si vide)"},
+    "inputs": {
+      "lora_name": "__STYLE_LORA__",
+      "strength_model": "__STYLE_LORA_WEIGHT__",
+      "strength_clip": "__STYLE_LORA_WEIGHT__",
+      "model": ["1", 0],
+      "clip": ["2", 0]
+    }
+  },
+  "5": {
+    "class_type": "LoraLoader",
+    "_meta": {"title": "LoRA personnage (retiré si vide)"},
+    "inputs": {
+      "lora_name": "__CHAR_LORA__",
+      "strength_model": "__CHAR_LORA_WEIGHT__",
+      "strength_clip": "__CHAR_LORA_WEIGHT__",
+      "model": ["4", 0],
+      "clip": ["4", 1]
+    }
+  },
+  "6": {
+    "class_type": "CLIPTextEncode",
+    "_meta": {"title": "Prompt (Flux ignore le négatif)"},
+    "inputs": {"text": "__PROMPT__", "clip": ["5", 1]}
+  },
+  "7": {
+    "class_type": "FluxGuidance",
+    "_meta": {"title": "Guidance Flux"},
+    "inputs": {"guidance": 3.5, "conditioning": ["6", 0]}
+  },
+  "8": {
+    "class_type": "ConditioningZeroOut",
+    "_meta": {"title": "Négatif vide (requis par KSampler)"},
+    "inputs": {"conditioning": ["6", 0]}
+  },
+  "9": {
+    "class_type": "EmptySD3LatentImage",
+    "_meta": {"title": "Latent vide"},
+    "inputs": {"width": "__WIDTH__", "height": "__HEIGHT__", "batch_size": 1}
+  },
+  "10": {
+    "class_type": "KSampler",
+    "_meta": {"title": "KSampler (euler / simple, 20 pas suffisent)"},
+    "inputs": {
+      "seed": "__SEED__",
+      "steps": "__STEPS__",
+      "cfg": 1.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1.0,
+      "model": ["5", 0],
+      "positive": ["7", 0],
+      "negative": ["8", 0],
+      "latent_image": ["9", 0]
+    }
+  },
+  "11": {
+    "class_type": "VAEDecode",
+    "_meta": {"title": "Décodage VAE"},
+    "inputs": {"samples": ["10", 0], "vae": ["3", 0]}
+  },
+  "12": {
+    "class_type": "SaveImage",
+    "_meta": {"title": "Sauvegarde"},
+    "inputs": {"filename_prefix": "__PREFIX__", "images": ["11", 0]}
+  }
+}
