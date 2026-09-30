@@ -25,6 +25,9 @@ jobs:
       - name: Check engine/
         run: ruff check engine/
 
+      - name: Check cartoon-factory/
+        run: ruff check cartoon-factory/src cartoon-factory/tests
+
   # ──────────────────────────────────────────────
   # 2. Tests — les garanties que le README promet
   # ──────────────────────────────────────────────
@@ -45,6 +48,13 @@ jobs:
       # agents, donc ils tournent sans clé API et sans brûler un seul token.
       - name: Run tests
         run: python -m pytest engine/tests -q
+
+      # cartoon-factory : orchestrateur testé sans GPU (croquis Pillow + ffmpeg statique).
+      - name: Install cartoon-factory deps
+        run: pip install --quiet -e "cartoon-factory[dev,ffmpeg]"
+
+      - name: Run cartoon-factory tests
+        run: python -m pytest cartoon-factory/tests -q
 
   # ──────────────────────────────────────────────
   # 3. Build de l'image Docker

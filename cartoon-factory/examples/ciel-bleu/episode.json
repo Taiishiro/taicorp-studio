@@ -1,0 +1,143 @@
+{
+  "id": "ciel-bleu",
+  "question": "Pourquoi le ciel est bleu ?",
+  "title": "Pourquoi le ciel est bleu ?",
+  "audience": "8-12 ans",
+  "language": "fr",
+  "summary": "La lumière du Soleil contient toutes les couleurs ; l'air disperse surtout le bleu, qui arrive de partout dans nos yeux.",
+  "characters": ["pilou"],
+  "shots": [
+    {
+      "id": "s01",
+      "duration_s": 4.0,
+      "voice_text": "Ce matin, Pilou lève le nez : le ciel est tout bleu !",
+      "visual": "Pilou dans un pré vert, regarde le ciel bleu, un grand soleil jaune en haut à droite, décor minimal.",
+      "characters": ["pilou"],
+      "motion": "Pilou lève lentement la tête vers le ciel",
+      "method": "tooncrafter",
+      "camera": "zoom_in",
+      "keyframes": [
+        {"prompt": "Pilou standing in a green meadow looking straight ahead, big yellow sun top right, clear blue sky"},
+        {"prompt": "Pilou standing in a green meadow looking up at the sky with wonder, arms slightly raised, big yellow sun top right"}
+      ]
+    },
+    {
+      "id": "s02",
+      "duration_s": 4.0,
+      "voice_text": "Mais pourquoi bleu ? Pas vert, pas rose, pas orange ?",
+      "visual": "Gros plan sur Pilou, air surpris, un point d'interrogation dessiné au crayon au-dessus de sa tête.",
+      "characters": ["pilou"],
+      "motion": "léger zoom sur le visage étonné",
+      "method": "kenburns",
+      "camera": "zoom_in",
+      "keyframes": [
+        {"prompt": "close-up of Pilou with a surprised face, a big hand-drawn question mark above his head, soft blue sky background"}
+      ]
+    },
+    {
+      "id": "s03",
+      "duration_s": 5.0,
+      "voice_text": "Tout commence avec le Soleil. Sa lumière a l'air blanche…",
+      "visual": "Le soleil seul dans le ciel, avec des rayons blancs qui partent dans toutes les directions.",
+      "characters": [],
+      "motion": "les rayons s'allongent doucement",
+      "method": "kenburns",
+      "camera": "zoom_out",
+      "keyframes": [
+        {"prompt": "a big smiling yellow sun in the sky with long white light rays radiating in every direction, minimal blue sky"}
+      ]
+    },
+    {
+      "id": "s04",
+      "duration_s": 5.0,
+      "voice_text": "…mais en vrai, elle contient toutes les couleurs de l'arc-en-ciel !",
+      "visual": "Un rayon de lumière blanche traverse un prisme en verre et ressort en arc-en-ciel : rouge, orange, jaune, vert, bleu, violet.",
+      "characters": [],
+      "motion": "l'arc-en-ciel se déploie en éventail à la sortie du prisme",
+      "method": "wan_i2v",
+      "camera": "pan_right",
+      "keyframes": [
+        {"prompt": "a white light beam entering a glass triangular prism and splitting into a rainbow fan of colors, red orange yellow green blue violet, white background"}
+      ]
+    },
+    {
+      "id": "s05",
+      "duration_s": 4.0,
+      "voice_text": "L'air, lui, est rempli de minuscules molécules invisibles.",
+      "visual": "Le ciel vu de près : des dizaines de petites boules bleu pâle (molécules d'air) flottent, avec Pilou minuscule en bas.",
+      "characters": ["pilou"],
+      "motion": "les molécules flottent doucement",
+      "method": "kenburns",
+      "camera": "pan_left",
+      "keyframes": [
+        {"prompt": "the sky seen up close, dozens of tiny pale blue circles floating everywhere representing air molecules, tiny Pilou at the bottom looking up"}
+      ]
+    },
+    {
+      "id": "s06",
+      "duration_s": 5.0,
+      "voice_text": "Quand la lumière les touche, le bleu rebondit dans tous les sens.",
+      "visual": "Un rayon de lumière frappe des molécules d'air et de petits éclats bleus partent dans toutes les directions, comme des étincelles.",
+      "characters": [],
+      "motion": "les éclats bleus jaillissent des molécules",
+      "method": "wan_i2v",
+      "camera": "static",
+      "keyframes": [
+        {"prompt": "a beam of sunlight hitting small air molecules, little blue sparks bouncing off in every direction like fireworks, other colors passing straight through, light blue background"}
+      ]
+    },
+    {
+      "id": "s07",
+      "duration_s": 4.0,
+      "voice_text": "Les autres couleurs, elles, passent presque tout droit.",
+      "visual": "Comparaison : des rayons rouge, orange et jaune filent droit à travers les molécules, seul le bleu zigzague.",
+      "characters": [],
+      "motion": "les rayons chauds traversent, le bleu rebondit",
+      "method": "kenburns",
+      "camera": "pan_right",
+      "keyframes": [
+        {"prompt": "red, orange and yellow light rays travelling straight through scattered air molecules while blue rays zigzag and bounce, simple diagram style, light background"}
+      ]
+    },
+    {
+      "id": "s08",
+      "duration_s": 5.0,
+      "voice_text": "Alors, où que Pilou regarde, du bleu arrive dans ses yeux.",
+      "visual": "Pilou au centre, des petites flèches bleues arrivent vers lui depuis tout le ciel.",
+      "characters": ["pilou"],
+      "motion": "Pilou tourne la tête de gauche à droite, émerveillé",
+      "method": "tooncrafter",
+      "camera": "static",
+      "keyframes": [
+        {"prompt": "Pilou standing in a meadow looking to the left, many small blue arrows coming from all over the sky toward him"},
+        {"prompt": "Pilou standing in a meadow looking to the right with a delighted face, many small blue arrows coming from all over the sky toward him"}
+      ]
+    },
+    {
+      "id": "s09",
+      "duration_s": 5.0,
+      "voice_text": "Le soir, la lumière traverse plus d'air : le bleu s'éparpille, il reste l'orange !",
+      "visual": "Coucher de soleil orange et rose à l'horizon, Pilou de dos qui le regarde, colline sombre.",
+      "characters": ["pilou"],
+      "motion": "le soleil descend lentement derrière la colline",
+      "method": "kenburns",
+      "camera": "zoom_in",
+      "keyframes": [
+        {"prompt": "Pilou seen from behind watching a big orange and pink sunset over a dark green hill, warm sky"}
+      ]
+    },
+    {
+      "id": "s10",
+      "duration_s": 5.0,
+      "voice_text": "Le ciel est bleu parce que l'air adore faire rebondir le bleu. Et toi, tu regardes en l'air ?",
+      "visual": "Pilou sourit, bras sur les hanches, sous un grand ciel bleu avec le soleil, prêt pour une nouvelle question.",
+      "characters": ["pilou"],
+      "motion": "Pilou fait un clin d'œil et lève le pouce",
+      "method": "kenburns",
+      "camera": "zoom_out",
+      "keyframes": [
+        {"prompt": "Pilou smiling proudly with hands on hips under a big clear blue sky with a yellow sun, green meadow"}
+      ]
+    }
+  ]
+}

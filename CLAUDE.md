@@ -35,6 +35,13 @@ pendant que le serveur SSE le lit → JSON invalide → l'UI clignote « OFFLINE
 En réel, les membres délibèrent vraiment (un appel chacun). Ne pas revenir à
 `DEMO_IDEAS` en mode réel — le conseil serait un décor.
 
+## Sous-projet `cartoon-factory/`
+
+Pipeline indépendant du studio (dessins animés éducatifs, 100 % local, GPU chez
+l'utilisateur). Skill `/episode`. Vérifier : `cd cartoon-factory && ruff check
+src tests && pytest -q` (13 tests, sans GPU). Ne jamais lancer ComfyUI ailleurs
+que sur `127.0.0.1` : un workflow ComfyUI exécute du code arbitraire.
+
 ## Gotchas
 
 - **Serveur multi-thread obligatoire** (`ThreadingTCPServer`) : le SSE est une
