@@ -1,0 +1,33 @@
+[project]
+name = "cartoon-factory"
+version = "0.1.0"
+description = "Pipeline local de dessins animés éducatifs 2D (ComfyUI + TTS + ffmpeg), orchestré par Claude Code"
+requires-python = ">=3.10"
+dependencies = ["pyyaml>=6.0", "pillow>=10.0", "numpy>=1.24"]
+
+[project.optional-dependencies]
+ffmpeg = ["imageio-ffmpeg>=0.5"]
+kokoro = ["kokoro>=0.9", "soundfile", "misaki[fr]"]
+xtts = ["TTS"]
+dev = ["pytest>=8.0", "ruff>=0.4"]
+
+[project.scripts]
+cartoon-factory = "cartoon_factory.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

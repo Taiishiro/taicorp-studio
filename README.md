@@ -19,6 +19,10 @@ Utilisateur → PO → Architecte → Context Manager → Senior Coder
 
 ## Structure du dossier
 
+- `cartoon-factory/` — **pipeline local de dessins animés éducatifs 2D** (ComfyUI +
+  TTS + ffmpeg, orchestré par Claude Code via le skill `/episode`). Voir
+  [cartoon-factory/README.md](cartoon-factory/README.md).
+
 - `.claude/agents/` — **un fichier par agent** (prompt système + outils + modèle + règles). Format de sous-agent Claude Code / Agent SDK.
 - `docs/passive-services.md` — les 3 services passifs (Memory, Dependency Graph, LLM Council), qui ne sont **pas** des agents LLM.
 

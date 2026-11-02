@@ -1,0 +1,105 @@
+{
+  "_comment": {
+    "class_type": "Note",
+    "_meta": {"title": "Wan 2.2 I2V 14B, deux experts (high/low noise) en GGUF Q4 pour 16 Go. Inspiré de Cordux/ComfyUI-Wan2.2-workflow. Nœuds cœur : WanImageToVideo, KSamplerAdvanced, ModelSamplingSD3. ⚠️ Vérifier les noms de fichiers dans config.yaml → comfy.models."},
+    "inputs": {}
+  },
+  "1": {
+    "class_type": "UnetLoaderGGUF",
+    "_meta": {"title": "Wan 2.2 high-noise (GGUF)"},
+    "inputs": {"unet_name": "__WAN_HIGH_GGUF__"}
+  },
+  "2": {
+    "class_type": "UnetLoaderGGUF",
+    "_meta": {"title": "Wan 2.2 low-noise (GGUF)"},
+    "inputs": {"unet_name": "__WAN_LOW_GGUF__"}
+  },
+  "3": {
+    "class_type": "CLIPLoader",
+    "_meta": {"title": "umT5-XXL fp8"},
+    "inputs": {"clip_name": "__WAN_CLIP__", "type": "wan", "device": "default"}
+  },
+  "4": {
+    "class_type": "VAELoader",
+    "_meta": {"title": "VAE Wan 2.1"},
+    "inputs": {"vae_name": "__WAN_VAE__"}
+  },
+  "5": {
+    "class_type": "CLIPVisionLoader",
+    "_meta": {"title": "CLIP Vision H"},
+    "inputs": {"clip_name": "__WAN_CLIP_VISION__"}
+  },
+  "6": {
+    "class_type": "LoadImage",
+    "_meta": {"title": "Dessin clé"},
+    "inputs": {"image": "__IMAGE_START__", "upload": "image"}
+  },
+  "7": {
+    "class_type": "CLIPVisionEncode",
+    "_meta": {"title": "Encodage CLIP Vision"},
+    "inputs": {"crop": "none", "clip_vision": ["5", 0], "image": ["6", 0]}
+  },
+  "8": {
+    "class_type": "CLIPTextEncode",
+    "_meta": {"title": "Prompt mouvement"},
+    "inputs": {"text": "__PROMPT__", "clip": ["3", 0]}
+  },
+  "9": {
+    "class_type": "CLIPTextEncode",
+    "_meta": {"title": "Négatif"},
+    "inputs": {"text": "__NEGATIVE__", "clip": ["3", 0]}
+  },
+  "10": {
+    "class_type": "WanImageToVideo",
+    "_meta": {"title": "Wan I2V (conditionnement)"},
+    "inputs": {
+      "width": "__WIDTH__", "height": "__HEIGHT__", "length": "__FRAMES__", "batch_size": 1,
+      "positive": ["8", 0], "negative": ["9", 0], "vae": ["4", 0],
+      "clip_vision_output": ["7", 0], "start_image": ["6", 0]
+    }
+  },
+  "11": {
+    "class_type": "ModelSamplingSD3",
+    "_meta": {"title": "Shift high"},
+    "inputs": {"shift": "__SHIFT__", "model": ["1", 0]}
+  },
+  "12": {
+    "class_type": "ModelSamplingSD3",
+    "_meta": {"title": "Shift low"},
+    "inputs": {"shift": "__SHIFT__", "model": ["2", 0]}
+  },
+  "13": {
+    "class_type": "KSamplerAdvanced",
+    "_meta": {"title": "Passe 1 : high-noise (première moitié des pas)"},
+    "inputs": {
+      "add_noise": "enable", "noise_seed": "__SEED__", "steps": "__STEPS__", "cfg": "__CFG__",
+      "sampler_name": "euler", "scheduler": "simple", "start_at_step": 0, "end_at_step": "__HALF_STEPS__",
+      "return_with_leftover_noise": "enable",
+      "model": ["11", 0], "positive": ["10", 0], "negative": ["10", 1], "latent_image": ["10", 2]
+    }
+  },
+  "14": {
+    "class_type": "KSamplerAdvanced",
+    "_meta": {"title": "Passe 2 : low-noise (seconde moitié)"},
+    "inputs": {
+      "add_noise": "disable", "noise_seed": "__SEED__", "steps": "__STEPS__", "cfg": "__CFG__",
+      "sampler_name": "euler", "scheduler": "simple", "start_at_step": "__HALF_STEPS__", "end_at_step": 10000,
+      "return_with_leftover_noise": "disable",
+      "model": ["12", 0], "positive": ["10", 0], "negative": ["10", 1], "latent_image": ["13", 0]
+    }
+  },
+  "15": {
+    "class_type": "VAEDecode",
+    "_meta": {"title": "Décodage VAE"},
+    "inputs": {"samples": ["14", 0], "vae": ["4", 0]}
+  },
+  "16": {
+    "class_type": "VHS_VideoCombine",
+    "_meta": {"title": "Export MP4 (VideoHelperSuite)"},
+    "inputs": {
+      "frame_rate": "__FPS__", "loop_count": 0, "filename_prefix": "__PREFIX__",
+      "format": "video/h264-mp4", "pix_fmt": "yuv420p", "crf": 17, "save_metadata": false,
+      "pingpong": false, "save_output": true, "images": ["15", 0]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+# Cœur de l'orchestrateur (CPU, pas de GPU nécessaire)
+pyyaml>=6.0
+pillow>=10.0
+numpy>=1.24
+# ffmpeg statique de secours si `ffmpeg` n'est pas dans le PATH
+imageio-ffmpeg>=0.5
+
+# Développement
+pytest>=8.0
+ruff>=0.4
+
+# ── Extras optionnels (à installer selon la voix choisie) ──
+# TTS Kokoro (léger, ~330 Mo, tourne sur CPU) :
+#   pip install kokoro>=0.9 soundfile misaki[fr]   && sudo apt install espeak-ng
+# TTS XTTS-v2 (Coqui, GPU conseillé, clonage de voix) :
+#   pip install TTS
+# Serveur MCP ComfyUI pour Claude Code :
+#   pip install comfy-mcp

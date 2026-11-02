@@ -1,0 +1,116 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# cartoon-factory — configuration principale
+# Tout est local : ComfyUI sur 127.0.0.1, TTS sur CPU/GPU, montage ffmpeg.
+# Les chemins relatifs sont résolus depuis ce fichier.
+# ─────────────────────────────────────────────────────────────────────────────
+
+project:
+  name: cartoon-factory
+  output_dir: output            # output/<id-episode>/… (un dossier par épisode)
+  characters_dir: characters    # fiches perso persistantes (JSON) — copiées depuis examples/
+  language: fr
+
+# Style graphique — ajouté devant chaque prompt de dessin clé.
+style:
+  prompt_prefix: >-
+    children's storybook pencil drawing, soft flat pastel colors, thick wobbly
+    crayon outlines, minimal background, simple rounded shapes, white paper
+    texture, gentle lighting
+  negative_prompt: >-
+    photo, photorealistic, 3d render, text, letters, watermark, signature,
+    complex background, detailed shading, dark, scary, extra limbs, deformed
+  # LoRA de style « crayon / dessin d'enfant » — À CHOISIR sur Civitai ou
+  # Hugging Face puis déposer dans ComfyUI/models/loras/. Vide = pas de LoRA.
+  lora:
+    file: ""                    # ex: "crayon_kids_style_v1.safetensors"
+    weight: 0.8
+    trigger: ""                 # mot-clé déclencheur éventuel du LoRA
+
+video:
+  width: 1920
+  height: 1080
+  fps: 24
+  vertical_variant: true        # exporter aussi une version 9:16 (1080x1920)
+  crf: 18
+  preset: medium
+
+# Résolution des dessins clés (avant upscale ffmpeg vers 1080p).
+keyframe:
+  width: 1024
+  height: 576                   # 16:9 — SDXL est à l'aise autour de 1 Mpx
+  steps: 28
+  cfg: 6.0
+  sampler: dpmpp_2m
+  scheduler: karras
+  seed_base: 424242             # seed = seed_base + index du plan (reproductible)
+
+comfy:
+  url: http://127.0.0.1:8188
+  timeout_s: 1800               # un clip Wan peut prendre >10 min sur 16 Go
+  poll_interval_s: 2.0
+  free_vram_between_stages: true   # POST /free entre chaque étape lourde
+  workflows:
+    keyframe: workflows/keyframe_sdxl.api.json      # ou keyframe_flux.api.json
+    tooncrafter: workflows/tooncrafter.api.json
+    wan_i2v: workflows/wan_i2v.api.json
+  # Noms de fichiers tels que ComfyUI les voit (dossier models/…).
+  # À faire correspondre avec scripts/download_models.sh.
+  models:
+    sdxl_checkpoint: "sd_xl_base_1.0.safetensors"
+    flux_unet_gguf: "flux1-dev-Q5_K_S.gguf"
+    flux_clip_l: "clip_l.safetensors"
+    flux_t5_gguf: "t5-v1_1-xxl-encoder-Q5_K_M.gguf"
+    flux_vae: "ae.safetensors"
+    tooncrafter: "ToonCrafter_512_interp-fp16.safetensors"
+    wan_high_gguf: "wan2.2_i2v_high_noise_14B_Q4_K_M.gguf"
+    wan_low_gguf: "wan2.2_i2v_low_noise_14B_Q4_K_M.gguf"
+    wan_clip: "umt5_xxl_fp8_e4m3fn_scaled.safetensors"
+    wan_vae: "wan_2.1_vae.safetensors"
+    wan_clip_vision: "clip_vision_h.safetensors"
+
+animation:
+  default_method: kenburns      # kenburns | tooncrafter | wan_i2v
+  kenburns:
+    zoom_max: 1.10              # zoom final (1.0 = aucun)
+    pan_fraction: 0.08          # amplitude du pan, en fraction de la largeur
+  tooncrafter:
+    width: 512
+    height: 320                 # ToonCrafter est entraîné en 512x320
+    frames: 16
+    steps: 20
+    cfg: 7.5
+    eta: 1.0
+    fps: 8
+  wan_i2v:
+    width: 832
+    height: 480                 # 480p = le bon compromis 16 Go VRAM
+    frames: 49                  # ≈ 3 s à 16 fps ; 81 max si la VRAM suit
+    steps: 20
+    cfg: 3.5
+    fps: 16
+    shift: 8.0
+
+tts:
+  backend: kokoro               # kokoro | xtts | espeak | silence
+  words_per_minute: 150         # rythme cible du script (estimation de durée)
+  pause_after_s: 0.35           # respiration ajoutée après chaque plan
+  sample_rate: 48000
+  kokoro:
+    voice: ff_siwis             # voix française de Kokoro (lang_code "f")
+    speed: 1.0
+  xtts:
+    model: tts_models/multilingual/multi-dataset/xtts_v2
+    speaker_wav: ""             # 6-10 s de voix de référence (wav). Vide = speaker par défaut
+    language: fr
+  espeak:
+    voice: fr
+    speed: 150
+
+subtitles:
+  enabled: true
+  burn_in: false                # true = incruste les sous-titres dans l'image
+
+music:
+  file: ""                      # musique libre de droits (wav/mp3). Vide = pas de musique
+  volume_db: -20
+  fade_s: 1.5
